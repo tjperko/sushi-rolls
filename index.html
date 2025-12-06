@@ -552,7 +552,8 @@
         summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
         updateNotice(0, shippingValue);
         if (summaryMeta) {
-          summaryMeta.textContent = 'No cards in your stack yet.';
+          const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
+          summaryMeta.textContent = `No cards in your stack yet · ${shippingDescriptor}`;
         }
         return;
       }
@@ -652,6 +653,14 @@
 
       if (notesField) {
         notesField.value = '';
+      }
+
+      if (quantityStatus) {
+        quantityStatus.textContent = '';
+      }
+
+      if (formStatus) {
+        formStatus.textContent = '';
       }
 
       renderSummary();
