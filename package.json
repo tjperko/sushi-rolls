@@ -1,0 +1,8 @@
+{
+  "name": "sushi-rolls",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "fetch:menu": "node scripts/fetch-menu.js"
+  }
+}

@@ -341,6 +341,28 @@
       return base || 'card';
     };
 
+    function normalizeMenuPayload(payload) {
+      if (!payload) return { items: [], updatedAt: null };
+
+      if (Array.isArray(payload)) {
+        return { items: payload, updatedAt: null };
+      }
+
+      return {
+        items: Array.isArray(payload.items) ? payload.items : [],
+        updatedAt: payload.updatedAt || payload.lastUpdated || payload?.meta?.updatedAt || null,
+      };
+    }
+
+    function formatFeedTimestamp(isoDate) {
+      if (!isoDate) return null;
+
+      const parsed = new Date(isoDate);
+      if (Number.isNaN(parsed)) return null;
+
+      return parsed.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
     const renderCard = item => {
       const slug = slugify(item.name, item.sku);
       const titleId = `${slug}-title`;
@@ -469,11 +491,15 @@
       try {
         const response = await fetch('data/menu.json', { cache: 'no-store' });
         if (!response.ok) throw new Error('Menu fetch failed');
-        const menuItems = await response.json();
+        const payload = await response.json();
+        const { items: menuItems, updatedAt } = normalizeMenuPayload(payload);
+        const formattedUpdatedAt = formatFeedTimestamp(updatedAt);
 
         if (!Array.isArray(menuItems) || !menuItems.length) {
           if (menuStatus) {
-            menuStatus.textContent = 'No new drops found — showing the base menu.';
+            menuStatus.textContent = formattedUpdatedAt
+              ? `No new drops found — showing the base menu. Last updated ${formattedUpdatedAt}.`
+              : 'No new drops found — showing the base menu.';
             menuStatus.style.color = 'var(--accent)';
           }
           return;
@@ -482,7 +508,9 @@
         menuGrid.innerHTML = menuItems.map(renderCard).join('');
 
         if (menuStatus) {
-          menuStatus.textContent = 'Menu updated from latest data feed.';
+          menuStatus.textContent = formattedUpdatedAt
+            ? `Menu updated from latest data feed. Last updated ${formattedUpdatedAt}.`
+            : 'Menu updated from latest data feed.';
           menuStatus.style.color = 'var(--muted)';
         }
       } catch (error) {
