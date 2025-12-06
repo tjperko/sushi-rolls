@@ -225,6 +225,7 @@
 
             <button type="submit" class="cta" style="width:100%">Save my weekly stack</button>
             <p class="muted-center" style="margin-top:0.6rem">You won't be charged now — we bill when the window locks on Friday.</p>
+            <div id="form-status" role="status" aria-live="polite" style="margin-top:0.5rem;color:var(--muted);"></div>
           </form>
         </div>
 
@@ -303,6 +304,8 @@
     const quantityInputs = Array.from(document.querySelectorAll('input[type="number"][data-price]'));
     const summaryList = document.getElementById('summary-list');
     const summaryTotal = document.getElementById('summary-total');
+    const orderForm = document.getElementById('order-form');
+    const formStatus = document.getElementById('form-status');
 
     function formatCurrency(value) {
       return `$${value.toFixed(2)}`;
@@ -335,6 +338,22 @@
 
     quantityInputs.forEach(input => input.addEventListener('input', renderSummary));
     renderSummary();
+
+    orderForm?.addEventListener('submit', event => {
+      event.preventDefault();
+      const email = orderForm.email.value.trim();
+      const shipping = orderForm.shipping.value;
+      const notes = orderForm.notes.value.trim();
+
+      const messageParts = [
+        email ? `Saved for ${email}` : 'Saved your weekly stack',
+        shipping ? `· ${shipping} shipping` : '',
+        notes ? `· note added` : '',
+      ];
+
+      const message = messageParts.filter(Boolean).join(' ');
+      formStatus.textContent = message || 'Details saved.';
+    });
   </script>
 </body>
 </html>
