@@ -237,6 +237,7 @@
           <div class="summary-total" id="summary-total">
             <span>Weekly bill</span><span>$0</span>
           </div>
+          <div id="quantity-status" role="status" aria-live="polite" style="color:var(--muted);min-height:1.25rem;margin-top:0.35rem;"></div>
           <p style="color:var(--muted);margin-top:0.75rem;">We combine shipping and show your exact total before charging each Friday. Edit quantities anytime until lock.</p>
         </div>
       </div>
@@ -306,6 +307,7 @@
     const summaryTotal = document.getElementById('summary-total');
     const orderForm = document.getElementById('order-form');
     const formStatus = document.getElementById('form-status');
+    const quantityStatus = document.getElementById('quantity-status');
 
     function formatCurrency(value) {
       return `$${value.toFixed(2)}`;
@@ -336,7 +338,19 @@
       summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
     }
 
-    quantityInputs.forEach(input => input.addEventListener('input', renderSummary));
+    quantityInputs.forEach(input => input.addEventListener('input', event => {
+      const rawValue = event.target.value;
+      const normalized = Math.max(0, Math.floor(Number(rawValue) || 0));
+
+      if (String(normalized) !== rawValue) {
+        event.target.value = normalized;
+        quantityStatus.textContent = `Adjusted "${event.target.dataset.name}" to ${normalized} (whole numbers only).`;
+      } else {
+        quantityStatus.textContent = '';
+      }
+
+      renderSummary();
+    }));
     renderSummary();
 
     orderForm?.addEventListener('submit', event => {
