@@ -154,6 +154,7 @@
     <section id="menu" class="section container" aria-labelledby="menu-heading">
       <h2 id="menu-heading">This Week's À La Carte Menu</h2>
       <p class="lead">Add exactly what you want. Minimum 3 cards for free shipping. Prices are what you pay on Friday.</p>
+      <p id="menu-status" class="input-helper" aria-live="polite" style="text-align:center;margin-top:-0.5rem;">Loading the latest weekly drops…</p>
 
       <div class="grid menu-grid" role="list" aria-label="Weekly drops">
         <article class="card" role="listitem" aria-labelledby="ohtani-title">
@@ -328,6 +329,7 @@
     const quantityStatus = document.getElementById('quantity-status');
     const storageStatus = document.getElementById('storage-status');
     const menuGrid = document.querySelector('.menu-grid');
+    const menuStatus = document.getElementById('menu-status');
 
     const slugify = (text, fallback) => {
       const base = (text || fallback || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -452,6 +454,11 @@
     async function buildMenuFromData() {
       if (!menuGrid) return;
 
+      if (menuStatus) {
+        menuStatus.textContent = 'Loading the latest weekly drops…';
+        menuStatus.style.textAlign = 'center';
+      }
+
       try {
         const response = await fetch('data/menu.json', { cache: 'no-store' });
         if (!response.ok) throw new Error('Menu fetch failed');
@@ -460,8 +467,18 @@
         if (!Array.isArray(menuItems) || !menuItems.length) return;
 
         menuGrid.innerHTML = menuItems.map(renderCard).join('');
+
+        if (menuStatus) {
+          menuStatus.textContent = 'Menu updated from latest data feed.';
+          menuStatus.style.color = 'var(--muted)';
+        }
       } catch (error) {
         console.warn('Using fallback menu markup:', error);
+
+        if (menuStatus) {
+          menuStatus.textContent = 'Unable to load the latest menu — showing fallback items.';
+          menuStatus.style.color = 'var(--accent)';
+        }
       } finally {
         initializeQuantityInputs();
         hydratePreferences();
