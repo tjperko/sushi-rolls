@@ -305,7 +305,7 @@
   </footer>
 
   <script>
-    const quantityInputs = Array.from(document.querySelectorAll('input[type="number"][data-price]'));
+    let quantityInputs = [];
     const summaryList = document.getElementById('summary-list');
     const summaryTotal = document.getElementById('summary-total');
     const summaryNotice = document.getElementById('summary-notice');
@@ -314,6 +314,59 @@
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
+    const menuGrid = document.querySelector('.menu-grid');
+
+    const slugify = (text, fallback) => {
+      const base = (text || fallback || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      return base || 'card';
+    };
+
+    const renderCard = item => {
+      const slug = slugify(item.name, item.sku);
+      const titleId = `${slug}-title`;
+      const qtyId = `qty-${slug}`;
+      const price = Number(item.price) || 0;
+      const formattedPrice = `$${price}`;
+      const imageAlt = item.imageAlt || `${item.name} card artwork`;
+
+      return `
+        <article class="card" role="listitem" aria-labelledby="${titleId}">
+          <img src="${item.image}" alt="${imageAlt}" loading="lazy" width="600" height="360">
+          <div class="pill">${item.pill}</div>
+          <h3 id="${titleId}">${item.name}</h3>
+          <p>${item.description}</p>
+          <div class="price" data-price="${price}">${formattedPrice}</div>
+          <div class="actions">
+            <label class="quantity" for="${qtyId}">Qty</label>
+            <input id="${qtyId}" data-sku="${item.sku}" data-name="${item.name}" data-price="${price}" type="number" min="0" value="0" aria-label="Quantity for ${item.name}" />
+          </div>
+        </article>
+      `;
+    };
+
+    async function buildMenuFromData() {
+      if (!menuGrid) return;
+
+      try {
+        const response = await fetch('data/menu.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Menu fetch failed');
+        const menuItems = await response.json();
+
+        if (!Array.isArray(menuItems) || !menuItems.length) return;
+
+        menuGrid.innerHTML = menuItems.map(renderCard).join('');
+      } catch (error) {
+        console.warn('Using fallback menu markup:', error);
+      } finally {
+        initializeQuantityInputs();
+      }
+    }
+
+    function initializeQuantityInputs() {
+      quantityInputs = Array.from(document.querySelectorAll('input[type="number"][data-price]'));
+      quantityInputs.forEach(input => input.addEventListener('input', handleQuantityChange));
+      renderSummary();
+    }
 
     function formatCurrency(value) {
       return `$${value.toFixed(2)}`;
@@ -385,7 +438,7 @@
       updateNotice(cardCount, shippingValue);
     }
 
-    quantityInputs.forEach(input => input.addEventListener('input', event => {
+    function handleQuantityChange(event) {
       const rawValue = event.target.value;
       const normalized = Math.max(0, Math.floor(Number(rawValue) || 0));
 
@@ -399,9 +452,7 @@
       }
 
       renderSummary();
-    }));
-
-    renderSummary();
+    }
 
     shippingSelect?.addEventListener('change', renderSummary);
 
@@ -423,6 +474,7 @@
         formStatus.textContent = messageParts.filter(Boolean).join(' ');
       }
     });
+    buildMenuFromData();
   </script>
 </body>
 </html>
