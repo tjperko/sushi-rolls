@@ -1,34 +1,37 @@
-[
-  {
-    "name": "Spicy Ohtani Roll",
-    "sku": "now-123",
-    "price": 12,
-    "pill": "Now #123 · closes Thu",
-    "description": "Walk-off hero moment in green foil. Print-to-demand window closes Thursday night.",
-    "image": "https://via.placeholder.com/600x360/22c55e/ffffff?text=Now+%23123"
-  },
-  {
-    "name": "California Clement Roll",
-    "sku": "ls-889",
-    "price": 10,
-    "pill": "Living Set #889 · ships next week",
-    "description": "Rookie vibes with avo twist — order now, billed Friday, ships with your stack.",
-    "image": "https://via.placeholder.com/600x360/e11d48/ffffff?text=Living+%23889"
-  },
-  {
-    "name": "Dragon Queen Roll",
-    "sku": "nba-queen",
-    "price": 15,
-    "pill": "NBA Rookie Auto · 99 copies",
-    "description": "Chrome finish with on-card signature. Limited to 99. Locks Friday.",
-    "image": "https://via.placeholder.com/600x360/2563eb/ffffff?text=Rookie+Auto"
-  },
-  {
-    "name": "Rainbow Parallel Add-On",
-    "sku": "parallel-addon",
-    "price": 8,
-    "pill": "Bundle add-on",
-    "description": "We chase parallels across your picks. If we hit, they ride in the same bill & shipment.",
-    "image": "https://via.placeholder.com/600x360/f59e0b/ffffff?text=Parallels+Bundle"
-  }
-]
+{
+  "updatedAt": "2025-01-05T10:00:00Z",
+  "items": [
+    {
+      "name": "Spicy Ohtani Roll",
+      "sku": "now-123",
+      "price": 12,
+      "pill": "Now #123 · closes Thu",
+      "description": "Walk-off hero moment in green foil. Print-to-demand window closes Thursday night.",
+      "image": "https://via.placeholder.com/600x360/22c55e/ffffff?text=Now+%23123"
+    },
+    {
+      "name": "California Clement Roll",
+      "sku": "ls-889",
+      "price": 10,
+      "pill": "Living Set #889 · ships next week",
+      "description": "Rookie vibes with avo twist — order now, billed Friday, ships with your stack.",
+      "image": "https://via.placeholder.com/600x360/e11d48/ffffff?text=Living+%23889"
+    },
+    {
+      "name": "Dragon Queen Roll",
+      "sku": "nba-queen",
+      "price": 15,
+      "pill": "NBA Rookie Auto · 99 copies",
+      "description": "Chrome finish with on-card signature. Limited to 99. Locks Friday.",
+      "image": "https://via.placeholder.com/600x360/2563eb/ffffff?text=Rookie+Auto"
+    },
+    {
+      "name": "Rainbow Parallel Add-On",
+      "sku": "parallel-addon",
+      "price": 8,
+      "pill": "Bundle add-on",
+      "description": "We chase parallels across your picks. If we hit, they ride in the same bill & shipment.",
+      "image": "https://via.placeholder.com/600x360/f59e0b/ffffff?text=Parallels+Bundle"
+    }
+  ]
+}
