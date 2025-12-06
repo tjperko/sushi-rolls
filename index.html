@@ -240,6 +240,7 @@
             <span>Weekly bill</span><span>$0</span>
           </div>
           <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
+          <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
           <p style="color:var(--muted);margin-top:0.75rem;">We combine shipping and show your exact total before charging each Friday. Edit quantities anytime until lock.</p>
         </div>
       </div>
@@ -365,8 +366,10 @@
 
       if (String(normalized) !== rawValue) {
         event.target.value = normalized;
-        quantityStatus.textContent = `Adjusted "${event.target.dataset.name}" to ${normalized} (whole numbers only).`;
-      } else {
+        if (quantityStatus) {
+          quantityStatus.textContent = `Adjusted "${event.target.dataset.name}" to ${normalized} (whole numbers only).`;
+        }
+      } else if (quantityStatus) {
         quantityStatus.textContent = '';
       }
 
