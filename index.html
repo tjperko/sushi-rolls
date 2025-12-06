@@ -464,7 +464,13 @@
         if (!response.ok) throw new Error('Menu fetch failed');
         const menuItems = await response.json();
 
-        if (!Array.isArray(menuItems) || !menuItems.length) return;
+        if (!Array.isArray(menuItems) || !menuItems.length) {
+          if (menuStatus) {
+            menuStatus.textContent = 'No new drops found — showing the base menu.';
+            menuStatus.style.color = 'var(--accent)';
+          }
+          return;
+        }
 
         menuGrid.innerHTML = menuItems.map(renderCard).join('');
 
