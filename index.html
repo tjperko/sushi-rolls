@@ -312,13 +312,20 @@
     const orderForm = document.getElementById('order-form');
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
+    const shippingSelect = document.getElementById('shipping');
 
     function formatCurrency(value) {
       return `$${value.toFixed(2)}`;
     }
 
-    function updateNotice(cardCount) {
+    function updateNotice(cardCount, shippingValue) {
       if (!summaryNotice) return;
+
+      if (shippingValue === 'pickup') {
+        summaryNotice.textContent = '';
+        summaryNotice.style.display = 'none';
+        return;
+      }
 
       if (cardCount < 3) {
         const remaining = 3 - cardCount;
@@ -342,11 +349,12 @@
         .filter(line => line.qty > 0);
 
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
+      const shippingValue = shippingSelect?.value;
 
       if (!lines.length) {
         summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
         summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
-        updateNotice(0);
+        updateNotice(0, shippingValue);
         return;
       }
 
@@ -357,7 +365,7 @@
       }).join('');
 
       summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
-      updateNotice(cardCount);
+      updateNotice(cardCount, shippingValue);
     }
 
     quantityInputs.forEach(input => input.addEventListener('input', event => {
@@ -375,6 +383,9 @@
 
       renderSummary();
     }));
+
+    shippingSelect?.addEventListener('change', renderSummary);
+
     renderSummary();
 
     orderForm?.addEventListener('submit', event => {
