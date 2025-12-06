@@ -574,6 +574,8 @@
         return;
       }
 
+      const pendingLines = lines.filter(line => !line.hasPrice);
+      const pendingCount = pendingLines.reduce((sum, line) => sum + line.qty, 0);
       const summaryItems = lines.map(line => {
         const unitPrice = line.hasPrice ? line.price : 0;
         const lineTotal = line.qty * (Number.isFinite(unitPrice) ? unitPrice : 0);
@@ -586,7 +588,7 @@
         return `<li><span>${line.qty} × ${line.name}</span><span>${priceDisplay}</span></li>`;
       });
 
-      const hasPendingPrices = lines.some(line => !line.hasPrice);
+      const hasPendingPrices = pendingLines.length > 0;
 
       if (shippingApplies) {
         summaryItems.push(`<li><span>Shipping</span><span>${formatCurrency(SHIPPING_FEE)}</span></li>`);
@@ -595,7 +597,8 @@
 
       summaryList.innerHTML = summaryItems.join('');
 
-      summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
+      const totalLabel = hasPendingPrices ? 'Weekly bill (priced items shown)' : 'Weekly bill';
+      summaryTotal.innerHTML = `<span>${totalLabel}</span><span>${formatCurrency(total)}</span>`;
       if (summaryMeta) {
         const noun = cardCount === 1 ? 'card' : 'cards';
         const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
@@ -604,9 +607,12 @@
       updateNotice(cardCount, shippingValue);
 
       if (pricingStatus) {
-        pricingStatus.textContent = hasPendingPrices
-          ? 'Some items are waiting on pricing — weekly totals exclude those lines until prices post.'
-          : '';
+        if (hasPendingPrices) {
+          const pendingNoun = pendingCount === 1 ? 'item is' : 'items are';
+          pricingStatus.textContent = `${pendingCount} ${pendingNoun} waiting on pricing — totals include priced items and shipping only until rates post.`;
+        } else {
+          pricingStatus.textContent = '';
+        }
       }
     }
 
