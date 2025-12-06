@@ -241,6 +241,7 @@
           </div>
           <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
           <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
+          <p id="storage-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;color:var(--muted);"></p>
           <button
             type="button"
             id="reset-preferences"
@@ -317,6 +318,7 @@
     const summaryTotal = document.getElementById('summary-total');
     const summaryNotice = document.getElementById('summary-notice');
     const orderForm = document.getElementById('order-form');
+    const emailField = document.getElementById('email');
     const shippingSelect = document.getElementById('shipping');
     const notesField = document.getElementById('notes');
     const resetPreferencesButton = document.getElementById('reset-preferences');
@@ -324,6 +326,7 @@
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
+    const storageStatus = document.getElementById('storage-status');
     const menuGrid = document.querySelector('.menu-grid');
 
     const slugify = (text, fallback) => {
@@ -354,7 +357,43 @@
       `;
     };
 
+    let storageAvailable = null;
+    const hasLocalStorage = () => {
+      if (storageAvailable !== null) return storageAvailable;
+
+      try {
+        if (typeof window === 'undefined' || !('localStorage' in window)) {
+          storageAvailable = false;
+          return storageAvailable;
+        }
+
+        const testKey = '__rolls-storage-check__';
+        window.localStorage.setItem(testKey, 'ok');
+        window.localStorage.removeItem(testKey);
+        storageAvailable = true;
+      } catch (error) {
+        console.warn('LocalStorage unavailable; skipping persistence', error);
+        storageAvailable = false;
+      }
+
+      return storageAvailable;
+    };
+
+    function updateStorageStatus() {
+      if (!storageStatus) return;
+
+      if (hasLocalStorage()) {
+        storageStatus.textContent = 'Your picks auto-save in this browser.';
+        storageStatus.style.color = 'var(--muted)';
+      } else {
+        storageStatus.textContent = 'Saving is blocked here — keep this tab open until checkout to avoid losing edits.';
+        storageStatus.style.color = 'var(--accent)';
+      }
+    }
+
     function persistPreferences() {
+      if (!hasLocalStorage()) return;
+
       try {
         const quantities = quantityInputs.reduce((acc, input) => {
           const qty = Number(input.value) || 0;
@@ -366,6 +405,7 @@
 
         const payload = {
           quantities,
+          email: emailField?.value || '',
           shipping: shippingSelect?.value || '',
           notes: notesField?.value || '',
         };
@@ -377,7 +417,7 @@
     }
 
     function hydratePreferences() {
-      if (!window.localStorage) return;
+      if (!hasLocalStorage()) return;
 
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -392,6 +432,10 @@
             input.value = savedValue;
           }
         });
+
+        if (emailField && typeof parsed?.email === 'string') {
+          emailField.value = parsed.email;
+        }
 
         if (shippingSelect && parsed?.shipping) {
           shippingSelect.value = parsed.shipping;
@@ -514,6 +558,7 @@
       }
 
       renderSummary();
+      persistPreferences();
     }
 
     orderForm?.addEventListener('submit', event => {
@@ -537,8 +582,27 @@
       persistPreferences();
     });
 
+    shippingSelect?.addEventListener('change', () => {
+      renderSummary();
+      persistPreferences();
+    });
+
+    emailField?.addEventListener('input', () => {
+      persistPreferences();
+    });
+
+    notesField?.addEventListener('input', () => {
+      persistPreferences();
+    });
+
     resetPreferencesButton?.addEventListener('click', () => {
-      localStorage.removeItem(STORAGE_KEY);
+      if (hasLocalStorage()) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+          console.warn('Unable to clear saved preferences', error);
+        }
+      }
       quantityInputs.forEach(input => {
         input.value = 0;
       });
@@ -547,12 +611,17 @@
         shippingSelect.value = shippingSelect.options[0]?.value || '';
       }
 
+      if (emailField) {
+        emailField.value = '';
+      }
+
       if (notesField) {
         notesField.value = '';
       }
 
       renderSummary();
     });
+    updateStorageStatus();
     buildMenuFromData();
   </script>
 </body>
