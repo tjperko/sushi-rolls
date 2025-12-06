@@ -535,6 +535,12 @@
       }
     }
 
+    const getShippingLabel = () => {
+      if (!shippingSelect) return 'Shipping preference not set';
+      const selectedOption = shippingSelect.options?.[shippingSelect.selectedIndex || 0];
+      return selectedOption?.text || 'Shipping preference not set';
+    };
+
     function renderSummary() {
       let total = 0;
       const lines = quantityInputs
@@ -557,8 +563,7 @@
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
       const shippingValue = shippingSelect?.value || '';
       const shippingApplies = cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
-      const shippingLabel =
-        shippingSelect?.options?.[shippingSelect.selectedIndex || 0]?.text || 'Shipping preference not set';
+      const shippingLabel = getShippingLabel();
 
       if (!lines.length) {
         summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
@@ -638,10 +643,11 @@
       const email = orderForm.email.value.trim();
       const shipping = orderForm.shipping.value;
       const notes = orderForm.notes.value.trim();
+      const shippingDescriptor = shipping ? getShippingLabel() : '';
 
       const messageParts = [
         email ? `Saved for ${email}` : 'Saved your weekly stack',
-        shipping ? `· ${shipping} shipping` : '',
+        shippingDescriptor ? `· ${shippingDescriptor}` : '',
         notes
           ? `· note: "${notes.length > 60 ? `${notes.slice(0, 60)}…` : notes}"`
           : '',
