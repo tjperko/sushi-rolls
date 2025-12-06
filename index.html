@@ -248,6 +248,13 @@
           <p id="pricing-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;"></p>
           <button
             type="button"
+            id="review-handoff"
+            style="margin-top:0.35rem;background:var(--brand);color:#fff;border:0;padding:0.6rem 0.9rem;border-radius:8px;cursor:pointer;font-weight:700;width:100%;box-shadow:0 8px 24px rgba(15,23,42,0.18);"
+          >
+            Review & handoff
+          </button>
+          <button
+            type="button"
             id="reset-preferences"
             style="margin-top:0.35rem;background:none;border:1px solid #cbd5e1;padding:0.35rem 0.6rem;border-radius:8px;color:var(--muted);cursor:pointer;font-size:0.9rem;"
           >
@@ -316,6 +323,60 @@
     </div>
   </footer>
 
+  <div
+    id="handoff-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="handoff-title"
+    tabindex="-1"
+    style="position:fixed;inset:0;background:rgba(15,23,42,0.6);display:none;align-items:center;justify-content:center;padding:1rem;z-index:1000;"
+  >
+    <div
+      style="background:#fff;border-radius:12px;max-width:760px;width:100%;padding:1.5rem;box-shadow:0 18px 48px rgba(15,23,42,0.25);display:flex;flex-direction:column;gap:0.75rem;max-height:90vh;overflow:auto;"
+    >
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+        <div>
+          <p id="handoff-title" style="margin:0;font-weight:800;color:var(--brand);font-size:1.1rem;">Review & handoff payload</p>
+          <p style="margin:0;color:var(--muted);">Static preview for future Stripe/Shopify/Supabase endpoint.</p>
+        </div>
+        <button
+          type="button"
+          id="close-handoff"
+          aria-label="Close handoff preview"
+          style="background:none;border:1px solid #cbd5e1;border-radius:8px;padding:0.35rem 0.75rem;cursor:pointer;color:var(--muted);"
+        >
+          Close
+        </button>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;overflow:auto;">
+        <pre
+          id="handoff-json"
+          style="white-space:pre-wrap;word-break:break-word;margin:0;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:0.9rem;color:#0f172a;"
+          aria-live="polite"
+        ></pre>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+        <button
+          type="button"
+          id="copy-handoff"
+          style="background:var(--accent);color:#fff;border:0;border-radius:10px;padding:0.7rem 1rem;font-weight:700;cursor:pointer;box-shadow:0 10px 28px rgba(225,29,72,0.25);"
+        >
+          Copy JSON
+        </button>
+        <button
+          type="button"
+          id="download-handoff"
+          style="background:var(--accent-2);color:#fff;border:0;border-radius:10px;padding:0.7rem 1rem;font-weight:700;cursor:pointer;box-shadow:0 10px 28px rgba(34,197,94,0.25);"
+        >
+          Download JSON
+        </button>
+        <span id="handoff-status" role="status" aria-live="polite" style="color:var(--muted);"></span>
+      </div>
+    </div>
+  </div>
+
   <script>
     let quantityInputs = [];
     const summaryList = document.getElementById('summary-list');
@@ -328,6 +389,13 @@
     const shippingSelect = document.getElementById('shipping');
     const notesField = document.getElementById('notes');
     const resetPreferencesButton = document.getElementById('reset-preferences');
+    const reviewButton = document.getElementById('review-handoff');
+    const handoffModal = document.getElementById('handoff-modal');
+    const handoffJson = document.getElementById('handoff-json');
+    const closeHandoff = document.getElementById('close-handoff');
+    const copyHandoff = document.getElementById('copy-handoff');
+    const downloadHandoff = document.getElementById('download-handoff');
+    const handoffStatus = document.getElementById('handoff-status');
     const STORAGE_KEY = 'rolls-weekly-prefs';
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
@@ -553,9 +621,8 @@
       return input.dataset?.name || input.dataset?.sku || 'Card';
     };
 
-    function renderSummary() {
-      let total = 0;
-      const lines = quantityInputs
+    const collectLineItems = () =>
+      quantityInputs
         .map(input => {
           const parsedPrice = Number(input.dataset.price);
           const hasPriceAttr = input.dataset.hasPrice;
@@ -563,14 +630,25 @@
             hasPriceAttr === 'true' ||
             (hasPriceAttr === undefined && Number.isFinite(parsedPrice) && parsedPrice > 0);
 
+          const qty = Number(input.value) || 0;
+          const unitPrice = hasPrice && Number.isFinite(parsedPrice) ? parsedPrice : null;
+          const lineTotal = hasPrice && unitPrice !== null ? qty * unitPrice : 0;
+
           return {
-            qty: Number(input.value) || 0,
+            sku: input.dataset?.sku || slugify(getInputName(input)),
             name: getInputName(input),
+            qty,
             price: parsedPrice,
             hasPrice,
+            unitPrice,
+            lineTotal,
           };
         })
         .filter(line => line.qty > 0);
+
+    function renderSummary() {
+      let total = 0;
+      const lines = collectLineItems();
 
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
       const shippingValue = shippingSelect?.value || '';
@@ -633,6 +711,98 @@
       }
     }
 
+    const buildHandoffPayload = () => {
+      const lines = collectLineItems();
+      const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
+      const shippingValue = shippingSelect?.value || '';
+      const shippingLabel = getShippingLabel();
+      const shippingApplies = Boolean(shippingValue) && cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
+      const shippingFeeApplied = shippingValue === 'pickup' ? 0 : shippingApplies ? SHIPPING_FEE : 0;
+
+      const pricedSubtotal = lines.filter(line => line.hasPrice).reduce((sum, line) => sum + line.lineTotal, 0);
+      const pendingCount = lines.filter(line => !line.hasPrice).reduce((sum, line) => sum + line.qty, 0);
+
+      return {
+        meta: {
+          generatedAt: new Date().toISOString(),
+          weeklyLock: 'Friday 3 PM ET',
+          shippingDescriptor: shippingLabel,
+        },
+        customer: {
+          email: emailField?.value.trim() || '',
+          notes: notesField?.value.trim() || '',
+        },
+        shippingPreference: {
+          code: shippingValue || null,
+          label: shippingLabel,
+          feeApplied: shippingFeeApplied,
+          policy: shippingValue === 'pickup' ? 'pickup-waived' : cardCount >= 3 ? 'free-shipping' : 'conditional-shipping',
+        },
+        stack: {
+          cardCount,
+          items: lines.map(line => ({
+            sku: line.sku,
+            name: line.name,
+            quantity: line.qty,
+            unitPrice: line.unitPrice,
+            lineTotal: line.hasPrice ? line.lineTotal : null,
+            pricingStatus: line.hasPrice ? 'final' : 'pending',
+          })),
+          totals: {
+            pricedSubtotal,
+            shippingFee: shippingFeeApplied,
+            pendingCount,
+            grandTotal: pricedSubtotal + shippingFeeApplied,
+          },
+        },
+      };
+    };
+
+    function openHandoffModal() {
+      if (!handoffModal || !handoffJson) return;
+      const payload = buildHandoffPayload();
+      handoffJson.textContent = JSON.stringify(payload, null, 2);
+      handoffModal.style.display = 'flex';
+      handoffModal.focus({ preventScroll: true });
+    }
+
+    function closeHandoffModal() {
+      if (!handoffModal) return;
+      handoffModal.style.display = 'none';
+      if (handoffStatus) {
+        handoffStatus.textContent = '';
+      }
+    }
+
+    function copyHandoffPayload() {
+      if (!handoffJson) return;
+      const text = handoffJson.textContent || '';
+      if (!text) return;
+      navigator.clipboard
+        ?.writeText(text)
+        .then(() => {
+          if (handoffStatus) handoffStatus.textContent = 'Copied to clipboard.';
+        })
+        .catch(() => {
+          if (handoffStatus) handoffStatus.textContent = 'Copy blocked by browser.';
+        });
+    }
+
+    function downloadHandoffPayload() {
+      if (!handoffJson) return;
+      const text = handoffJson.textContent || '';
+      const blob = new Blob([text], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'rolls-weekly-handoff.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      if (handoffStatus) handoffStatus.textContent = 'Download ready.';
+    }
+
     function handleQuantityChange(event) {
       const rawValue = event.target.value;
       const normalized = Math.max(0, Math.floor(Number(rawValue) || 0));
@@ -691,6 +861,29 @@
     shippingSelect?.addEventListener('change', () => {
       renderSummary();
       persistPreferences();
+    });
+
+    reviewButton?.addEventListener('click', () => {
+      openHandoffModal();
+    });
+
+    closeHandoff?.addEventListener('click', () => {
+      closeHandoffModal();
+    });
+
+    handoffModal?.addEventListener('click', event => {
+      if (event.target === handoffModal) {
+        closeHandoffModal();
+      }
+    });
+
+    copyHandoff?.addEventListener('click', copyHandoffPayload);
+    downloadHandoff?.addEventListener('click', downloadHandoffPayload);
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && handoffModal?.style.display === 'flex') {
+        closeHandoffModal();
+      }
     });
 
     emailField?.addEventListener('input', () => {
