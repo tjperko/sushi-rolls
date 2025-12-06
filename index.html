@@ -154,6 +154,7 @@
     <section id="menu" class="section container" aria-labelledby="menu-heading">
       <h2 id="menu-heading">This Week's À La Carte Menu</h2>
       <p class="lead">Add exactly what you want. Minimum 3 cards for free shipping. Prices are what you pay on Friday.</p>
+      <p id="menu-status" class="input-helper" aria-live="polite" style="text-align:center;margin-top:-0.5rem;">Loading the latest weekly drops…</p>
 
       <div class="grid menu-grid" role="list" aria-label="Weekly drops">
         <article class="card" role="listitem" aria-labelledby="ohtani-title">
@@ -233,6 +234,7 @@
 
         <div class="panel" aria-live="polite">
           <h3>Order summary</h3>
+          <p id="summary-meta" class="muted-center" style="margin-top:-0.35rem;margin-bottom:0.75rem;"></p>
           <ul class="summary-list" id="summary-list">
             <li><span>No items yet</span><span>$0</span></li>
           </ul>
@@ -241,6 +243,7 @@
           </div>
           <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
           <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
+          <p id="storage-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;color:var(--muted);"></p>
           <button
             type="button"
             id="reset-preferences"
@@ -316,7 +319,9 @@
     const summaryList = document.getElementById('summary-list');
     const summaryTotal = document.getElementById('summary-total');
     const summaryNotice = document.getElementById('summary-notice');
+    const summaryMeta = document.getElementById('summary-meta');
     const orderForm = document.getElementById('order-form');
+    const emailField = document.getElementById('email');
     const shippingSelect = document.getElementById('shipping');
     const notesField = document.getElementById('notes');
     const resetPreferencesButton = document.getElementById('reset-preferences');
@@ -324,7 +329,9 @@
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
+    const storageStatus = document.getElementById('storage-status');
     const menuGrid = document.querySelector('.menu-grid');
+    const menuStatus = document.getElementById('menu-status');
 
     const slugify = (text, fallback) => {
       const base = (text || fallback || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -354,7 +361,43 @@
       `;
     };
 
+    let storageAvailable = null;
+    const hasLocalStorage = () => {
+      if (storageAvailable !== null) return storageAvailable;
+
+      try {
+        if (typeof window === 'undefined' || !('localStorage' in window)) {
+          storageAvailable = false;
+          return storageAvailable;
+        }
+
+        const testKey = '__rolls-storage-check__';
+        window.localStorage.setItem(testKey, 'ok');
+        window.localStorage.removeItem(testKey);
+        storageAvailable = true;
+      } catch (error) {
+        console.warn('LocalStorage unavailable; skipping persistence', error);
+        storageAvailable = false;
+      }
+
+      return storageAvailable;
+    };
+
+    function updateStorageStatus() {
+      if (!storageStatus) return;
+
+      if (hasLocalStorage()) {
+        storageStatus.textContent = 'Your picks auto-save in this browser.';
+        storageStatus.style.color = 'var(--muted)';
+      } else {
+        storageStatus.textContent = 'Saving is blocked here — keep this tab open until checkout to avoid losing edits.';
+        storageStatus.style.color = 'var(--accent)';
+      }
+    }
+
     function persistPreferences() {
+      if (!hasLocalStorage()) return;
+
       try {
         const quantities = quantityInputs.reduce((acc, input) => {
           const qty = Number(input.value) || 0;
@@ -366,6 +409,7 @@
 
         const payload = {
           quantities,
+          email: emailField?.value || '',
           shipping: shippingSelect?.value || '',
           notes: notesField?.value || '',
         };
@@ -377,7 +421,7 @@
     }
 
     function hydratePreferences() {
-      if (!window.localStorage) return;
+      if (!hasLocalStorage()) return;
 
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -392,6 +436,10 @@
             input.value = savedValue;
           }
         });
+
+        if (emailField && typeof parsed?.email === 'string') {
+          emailField.value = parsed.email;
+        }
 
         if (shippingSelect && parsed?.shipping) {
           shippingSelect.value = parsed.shipping;
@@ -408,16 +456,37 @@
     async function buildMenuFromData() {
       if (!menuGrid) return;
 
+      if (menuStatus) {
+        menuStatus.textContent = 'Loading the latest weekly drops…';
+        menuStatus.style.textAlign = 'center';
+      }
+
       try {
         const response = await fetch('data/menu.json', { cache: 'no-store' });
         if (!response.ok) throw new Error('Menu fetch failed');
         const menuItems = await response.json();
 
-        if (!Array.isArray(menuItems) || !menuItems.length) return;
+        if (!Array.isArray(menuItems) || !menuItems.length) {
+          if (menuStatus) {
+            menuStatus.textContent = 'No new drops found — showing the base menu.';
+            menuStatus.style.color = 'var(--accent)';
+          }
+          return;
+        }
 
         menuGrid.innerHTML = menuItems.map(renderCard).join('');
+
+        if (menuStatus) {
+          menuStatus.textContent = 'Menu updated from latest data feed.';
+          menuStatus.style.color = 'var(--muted)';
+        }
       } catch (error) {
         console.warn('Using fallback menu markup:', error);
+
+        if (menuStatus) {
+          menuStatus.textContent = 'Unable to load the latest menu — showing fallback items.';
+          menuStatus.style.color = 'var(--accent)';
+        }
       } finally {
         initializeQuantityInputs();
         hydratePreferences();
@@ -468,18 +537,24 @@
         .map(input => ({
           qty: Number(input.value) || 0,
           name: input.dataset.name,
-          price: Number(input.dataset.price),
+          price: Number(input.dataset.price) || 0,
         }))
         .filter(line => line.qty > 0);
 
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
       const shippingValue = shippingSelect?.value || '';
       const shippingApplies = cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
+      const shippingLabel =
+        shippingSelect?.options?.[shippingSelect.selectedIndex || 0]?.text || 'Shipping preference not set';
 
       if (!lines.length) {
         summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
         summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
         updateNotice(0, shippingValue);
+        if (summaryMeta) {
+          const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
+          summaryMeta.textContent = `No cards in your stack yet · ${shippingDescriptor}`;
+        }
         return;
       }
 
@@ -497,6 +572,11 @@
       summaryList.innerHTML = summaryItems.join('');
 
       summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
+      if (summaryMeta) {
+        const noun = cardCount === 1 ? 'card' : 'cards';
+        const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
+        summaryMeta.textContent = `${cardCount} ${noun} · ${shippingDescriptor}`;
+      }
       updateNotice(cardCount, shippingValue);
     }
 
@@ -514,6 +594,7 @@
       }
 
       renderSummary();
+      persistPreferences();
     }
 
     orderForm?.addEventListener('submit', event => {
@@ -537,8 +618,27 @@
       persistPreferences();
     });
 
+    shippingSelect?.addEventListener('change', () => {
+      renderSummary();
+      persistPreferences();
+    });
+
+    emailField?.addEventListener('input', () => {
+      persistPreferences();
+    });
+
+    notesField?.addEventListener('input', () => {
+      persistPreferences();
+    });
+
     resetPreferencesButton?.addEventListener('click', () => {
-      localStorage.removeItem(STORAGE_KEY);
+      if (hasLocalStorage()) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+          console.warn('Unable to clear saved preferences', error);
+        }
+      }
       quantityInputs.forEach(input => {
         input.value = 0;
       });
@@ -547,12 +647,25 @@
         shippingSelect.value = shippingSelect.options[0]?.value || '';
       }
 
+      if (emailField) {
+        emailField.value = '';
+      }
+
       if (notesField) {
         notesField.value = '';
       }
 
+      if (quantityStatus) {
+        quantityStatus.textContent = '';
+      }
+
+      if (formStatus) {
+        formStatus.textContent = '';
+      }
+
       renderSummary();
     });
+    updateStorageStatus();
     buildMenuFromData();
   </script>
 </body>
