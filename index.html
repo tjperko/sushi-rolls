@@ -154,6 +154,7 @@
     <section id="menu" class="section container" aria-labelledby="menu-heading">
       <h2 id="menu-heading">This Week's À La Carte Menu</h2>
       <p class="lead">Add exactly what you want. Minimum 3 cards for free shipping. Prices are what you pay on Friday.</p>
+      <p id="menu-status" class="input-helper" aria-live="polite" style="text-align:center;margin-top:-0.5rem;">Loading the latest weekly drops…</p>
 
       <div class="grid menu-grid" role="list" aria-label="Weekly drops">
         <article class="card" role="listitem" aria-labelledby="ohtani-title">
@@ -164,7 +165,7 @@
           <div class="price" data-price="12">$12</div>
           <div class="actions">
             <label class="quantity" for="qty-ohtani">Qty</label>
-            <input id="qty-ohtani" data-sku="now-123" data-name="Spicy Ohtani Roll" data-price="12" type="number" min="0" value="0" aria-label="Quantity for Spicy Ohtani Roll" />
+            <input id="qty-ohtani" data-sku="now-123" data-name="Spicy Ohtani Roll" data-price="12" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Spicy Ohtani Roll" />
           </div>
         </article>
 
@@ -176,7 +177,7 @@
           <div class="price" data-price="10">$10</div>
           <div class="actions">
             <label class="quantity" for="qty-clement">Qty</label>
-            <input id="qty-clement" data-sku="ls-889" data-name="California Clement Roll" data-price="10" type="number" min="0" value="0" aria-label="Quantity for California Clement Roll" />
+            <input id="qty-clement" data-sku="ls-889" data-name="California Clement Roll" data-price="10" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for California Clement Roll" />
           </div>
         </article>
 
@@ -188,7 +189,7 @@
           <div class="price" data-price="15">$15</div>
           <div class="actions">
             <label class="quantity" for="qty-queen">Qty</label>
-            <input id="qty-queen" data-sku="nba-queen" data-name="Dragon Queen Roll" data-price="15" type="number" min="0" value="0" aria-label="Quantity for Dragon Queen Roll" />
+            <input id="qty-queen" data-sku="nba-queen" data-name="Dragon Queen Roll" data-price="15" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Dragon Queen Roll" />
           </div>
         </article>
 
@@ -200,7 +201,7 @@
           <div class="price" data-price="8">$8</div>
           <div class="actions">
             <label class="quantity" for="qty-bundle">Qty</label>
-            <input id="qty-bundle" data-sku="parallel-addon" data-name="Rainbow Parallel Add-On" data-price="8" type="number" min="0" value="0" aria-label="Quantity for Rainbow Parallel Add-On" />
+            <input id="qty-bundle" data-sku="parallel-addon" data-name="Rainbow Parallel Add-On" data-price="8" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Rainbow Parallel Add-On" />
           </div>
         </article>
       </div>
@@ -217,6 +218,7 @@
 
             <label for="shipping" style="display:block;margin-bottom:.5rem">Shipping cadence</label>
             <select id="shipping" name="shipping" style="width:100%;padding:0.9rem;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:1rem">
+              <option value="" selected>Choose your shipping cadence</option>
               <option value="weekly">Weekly — ship every Friday after billing</option>
               <option value="biweekly">Bi-weekly — hold cards for two billing cycles</option>
               <option value="pickup">Local pickup — waive shipping</option>
@@ -233,6 +235,7 @@
 
         <div class="panel" aria-live="polite">
           <h3>Order summary</h3>
+          <p id="summary-meta" class="muted-center" style="margin-top:-0.35rem;margin-bottom:0.75rem;"></p>
           <ul class="summary-list" id="summary-list">
             <li><span>No items yet</span><span>$0</span></li>
           </ul>
@@ -241,6 +244,8 @@
           </div>
           <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
           <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
+          <p id="storage-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;color:var(--muted);"></p>
+          <p id="pricing-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;"></p>
           <button
             type="button"
             id="reset-preferences"
@@ -316,7 +321,10 @@
     const summaryList = document.getElementById('summary-list');
     const summaryTotal = document.getElementById('summary-total');
     const summaryNotice = document.getElementById('summary-notice');
+    const summaryMeta = document.getElementById('summary-meta');
+    const pricingStatus = document.getElementById('pricing-status');
     const orderForm = document.getElementById('order-form');
+    const emailField = document.getElementById('email');
     const shippingSelect = document.getElementById('shipping');
     const notesField = document.getElementById('notes');
     const resetPreferencesButton = document.getElementById('reset-preferences');
@@ -324,37 +332,86 @@
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
+    const storageStatus = document.getElementById('storage-status');
     const menuGrid = document.querySelector('.menu-grid');
+    const menuStatus = document.getElementById('menu-status');
 
     const slugify = (text, fallback) => {
       const base = (text || fallback || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       return base || 'card';
     };
 
+    const normalizeLabel = value => {
+      const trimmed = (value || '').trim();
+      return trimmed && trimmed !== 'undefined' ? trimmed : '';
+    };
+
     const renderCard = item => {
-      const slug = slugify(item.name, item.sku);
+      const safeName = normalizeLabel(item.name) || normalizeLabel(item.sku) || 'Card';
+      const slug = slugify(safeName, item.sku);
       const titleId = `${slug}-title`;
       const qtyId = `qty-${slug}`;
-      const price = Number(item.price) || 0;
-      const formattedPrice = `$${price}`;
-      const imageAlt = item.imageAlt || `${item.name} card artwork`;
+      const rawPrice = Number(item.price);
+      const hasPrice = Number.isFinite(rawPrice) && rawPrice > 0;
+      const price = hasPrice ? rawPrice : 0;
+      const formattedPrice = hasPrice ? `$${price}` : 'TBD';
+      const pillText = normalizeLabel(item.pill) || 'Weekly drop';
+      const description = normalizeLabel(item.description) || 'New drop this week. Add it to your stack before Friday lock.';
+      const imageAlt = normalizeLabel(item.imageAlt) || `${safeName} card artwork`;
+      const imageSrc = normalizeLabel(item.image) || 'https://via.placeholder.com/600x360/0f172a/ffffff?text=Weekly+Drop';
 
       return `
         <article class="card" role="listitem" aria-labelledby="${titleId}">
-          <img src="${item.image}" alt="${imageAlt}" loading="lazy" width="600" height="360">
-          <div class="pill">${item.pill}</div>
-          <h3 id="${titleId}">${item.name}</h3>
-          <p>${item.description}</p>
-          <div class="price" data-price="${price}">${formattedPrice}</div>
+          <img src="${imageSrc}" alt="${imageAlt}" loading="lazy" width="600" height="360">
+          <div class="pill">${pillText}</div>
+          <h3 id="${titleId}">${safeName}</h3>
+          <p>${description}</p>
+          <div class="price" data-price="${price}" data-has-price="${hasPrice}">${formattedPrice}</div>
           <div class="actions">
             <label class="quantity" for="${qtyId}">Qty</label>
-            <input id="${qtyId}" data-sku="${item.sku}" data-name="${item.name}" data-price="${price}" type="number" min="0" value="0" aria-label="Quantity for ${item.name}" />
+            <input id="${qtyId}" data-sku="${item.sku}" data-name="${safeName}" data-price="${hasPrice ? price : ''}" data-has-price="${hasPrice}" type="number" min="0" value="0" aria-label="Quantity for ${safeName}" />
           </div>
         </article>
       `;
     };
 
+    let storageAvailable = null;
+    const hasLocalStorage = () => {
+      if (storageAvailable !== null) return storageAvailable;
+
+      try {
+        if (typeof window === 'undefined' || !('localStorage' in window)) {
+          storageAvailable = false;
+          return storageAvailable;
+        }
+
+        const testKey = '__rolls-storage-check__';
+        window.localStorage.setItem(testKey, 'ok');
+        window.localStorage.removeItem(testKey);
+        storageAvailable = true;
+      } catch (error) {
+        console.warn('LocalStorage unavailable; skipping persistence', error);
+        storageAvailable = false;
+      }
+
+      return storageAvailable;
+    };
+
+    function updateStorageStatus() {
+      if (!storageStatus) return;
+
+      if (hasLocalStorage()) {
+        storageStatus.textContent = 'Your picks auto-save in this browser.';
+        storageStatus.style.color = 'var(--muted)';
+      } else {
+        storageStatus.textContent = 'Saving is blocked here — keep this tab open until checkout to avoid losing edits.';
+        storageStatus.style.color = 'var(--accent)';
+      }
+    }
+
     function persistPreferences() {
+      if (!hasLocalStorage()) return;
+
       try {
         const quantities = quantityInputs.reduce((acc, input) => {
           const qty = Number(input.value) || 0;
@@ -366,6 +423,7 @@
 
         const payload = {
           quantities,
+          email: emailField?.value || '',
           shipping: shippingSelect?.value || '',
           notes: notesField?.value || '',
         };
@@ -377,7 +435,7 @@
     }
 
     function hydratePreferences() {
-      if (!window.localStorage) return;
+      if (!hasLocalStorage()) return;
 
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -392,6 +450,10 @@
             input.value = savedValue;
           }
         });
+
+        if (emailField && typeof parsed?.email === 'string') {
+          emailField.value = parsed.email;
+        }
 
         if (shippingSelect && parsed?.shipping) {
           shippingSelect.value = parsed.shipping;
@@ -408,16 +470,37 @@
     async function buildMenuFromData() {
       if (!menuGrid) return;
 
+      if (menuStatus) {
+        menuStatus.textContent = 'Loading the latest weekly drops…';
+        menuStatus.style.textAlign = 'center';
+      }
+
       try {
         const response = await fetch('data/menu.json', { cache: 'no-store' });
         if (!response.ok) throw new Error('Menu fetch failed');
         const menuItems = await response.json();
 
-        if (!Array.isArray(menuItems) || !menuItems.length) return;
+        if (!Array.isArray(menuItems) || !menuItems.length) {
+          if (menuStatus) {
+            menuStatus.textContent = 'No new drops found — showing the base menu.';
+            menuStatus.style.color = 'var(--accent)';
+          }
+          return;
+        }
 
         menuGrid.innerHTML = menuItems.map(renderCard).join('');
+
+        if (menuStatus) {
+          menuStatus.textContent = 'Menu updated from latest data feed.';
+          menuStatus.style.color = 'var(--muted)';
+        }
       } catch (error) {
         console.warn('Using fallback menu markup:', error);
+
+        if (menuStatus) {
+          menuStatus.textContent = 'Unable to load the latest menu — showing fallback items.';
+          menuStatus.style.color = 'var(--accent)';
+        }
       } finally {
         initializeQuantityInputs();
         hydratePreferences();
@@ -443,6 +526,12 @@
         return;
       }
 
+      if (!shippingValue) {
+        summaryNotice.textContent = 'Select a shipping cadence to see shipping costs.';
+        summaryNotice.style.display = 'block';
+        return;
+      }
+
       const shippingApplies = shippingValue !== 'pickup' && cardCount < 3;
 
       if (shippingValue === 'pickup') {
@@ -462,32 +551,72 @@
       }
     }
 
+    const getShippingLabel = () => {
+      if (!shippingSelect) return 'Shipping preference not set';
+      const selectedOption = shippingSelect.options?.[shippingSelect.selectedIndex || 0];
+      return selectedOption?.text || 'Shipping preference not set';
+    };
+
+    const getInputName = input => {
+      if (!input) return 'Card';
+      const name = normalizeLabel(input.dataset?.name);
+      const sku = normalizeLabel(input.dataset?.sku);
+      return name || sku || 'Card';
+    };
+
     function renderSummary() {
       let total = 0;
       const lines = quantityInputs
-        .map(input => ({
-          qty: Number(input.value) || 0,
-          name: input.dataset.name,
-          price: Number(input.dataset.price),
-        }))
+        .map(input => {
+          const parsedPrice = Number(input.dataset.price);
+          const hasPriceAttr = input.dataset.hasPrice;
+          const hasPrice =
+            hasPriceAttr === 'true' ||
+            (hasPriceAttr === undefined && Number.isFinite(parsedPrice) && parsedPrice > 0);
+
+          return {
+            qty: Number(input.value) || 0,
+            name: getInputName(input),
+            price: parsedPrice,
+            hasPrice,
+          };
+        })
         .filter(line => line.qty > 0);
 
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
       const shippingValue = shippingSelect?.value || '';
-      const shippingApplies = cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
+      const shippingApplies = Boolean(shippingValue) && cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
+      const shippingLabel = getShippingLabel();
 
       if (!lines.length) {
         summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
         summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
         updateNotice(0, shippingValue);
+        if (pricingStatus) {
+          pricingStatus.textContent = '';
+        }
+        if (summaryMeta) {
+          const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
+          summaryMeta.textContent = `No cards in your stack yet · ${shippingDescriptor}`;
+        }
         return;
       }
 
+      const pendingLines = lines.filter(line => !line.hasPrice);
+      const pendingCount = pendingLines.reduce((sum, line) => sum + line.qty, 0);
       const summaryItems = lines.map(line => {
-        const lineTotal = line.qty * line.price;
-        total += lineTotal;
-        return `<li><span>${line.qty} × ${line.name}</span><span>${formatCurrency(lineTotal)}</span></li>`;
+        const unitPrice = line.hasPrice ? line.price : 0;
+        const lineTotal = line.qty * (Number.isFinite(unitPrice) ? unitPrice : 0);
+        const priceDisplay = line.hasPrice ? formatCurrency(lineTotal) : 'TBD';
+
+        if (line.hasPrice) {
+          total += lineTotal;
+        }
+
+        return `<li><span>${line.qty} × ${line.name}</span><span>${priceDisplay}</span></li>`;
       });
+
+      const hasPendingPrices = pendingLines.length > 0;
 
       if (shippingApplies) {
         summaryItems.push(`<li><span>Shipping</span><span>${formatCurrency(SHIPPING_FEE)}</span></li>`);
@@ -496,24 +625,41 @@
 
       summaryList.innerHTML = summaryItems.join('');
 
-      summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
+      const totalLabel = hasPendingPrices ? 'Weekly bill (priced items shown)' : 'Weekly bill';
+      summaryTotal.innerHTML = `<span>${totalLabel}</span><span>${formatCurrency(total)}</span>`;
+      if (summaryMeta) {
+        const noun = cardCount === 1 ? 'card' : 'cards';
+        const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
+        summaryMeta.textContent = `${cardCount} ${noun} · ${shippingDescriptor}`;
+      }
       updateNotice(cardCount, shippingValue);
+
+      if (pricingStatus) {
+        if (hasPendingPrices) {
+          const pendingNoun = pendingCount === 1 ? 'item is' : 'items are';
+          pricingStatus.textContent = `${pendingCount} ${pendingNoun} waiting on pricing — totals include priced items and shipping only until rates post.`;
+        } else {
+          pricingStatus.textContent = '';
+        }
+      }
     }
 
     function handleQuantityChange(event) {
       const rawValue = event.target.value;
       const normalized = Math.max(0, Math.floor(Number(rawValue) || 0));
+      const itemName = getInputName(event.target);
 
       if (String(normalized) !== rawValue) {
         event.target.value = normalized;
         if (quantityStatus) {
-          quantityStatus.textContent = `Adjusted "${event.target.dataset.name}" to ${normalized} (whole numbers only).`;
+          quantityStatus.textContent = `Adjusted "${itemName}" to ${normalized} (whole numbers only).`;
         }
       } else if (quantityStatus) {
         quantityStatus.textContent = '';
       }
 
       renderSummary();
+      persistPreferences();
     }
 
     orderForm?.addEventListener('submit', event => {
@@ -521,10 +667,26 @@
       const email = orderForm.email.value.trim();
       const shipping = orderForm.shipping.value;
       const notes = orderForm.notes.value.trim();
+      const shippingDescriptor = shipping ? getShippingLabel() : '';
+
+      const missingShipping = !shipping;
+
+      if (formStatus) {
+        formStatus.style.color = missingShipping ? 'var(--accent)' : 'var(--muted)';
+      }
+
+      if (missingShipping) {
+        if (formStatus) {
+          formStatus.textContent = 'Choose a shipping cadence to save your weekly stack.';
+        }
+        orderForm.shipping.focus();
+        persistPreferences();
+        return;
+      }
 
       const messageParts = [
         email ? `Saved for ${email}` : 'Saved your weekly stack',
-        shipping ? `· ${shipping} shipping` : '',
+        shippingDescriptor ? `· ${shippingDescriptor}` : '',
         notes
           ? `· note: "${notes.length > 60 ? `${notes.slice(0, 60)}…` : notes}"`
           : '',
@@ -537,8 +699,27 @@
       persistPreferences();
     });
 
+    shippingSelect?.addEventListener('change', () => {
+      renderSummary();
+      persistPreferences();
+    });
+
+    emailField?.addEventListener('input', () => {
+      persistPreferences();
+    });
+
+    notesField?.addEventListener('input', () => {
+      persistPreferences();
+    });
+
     resetPreferencesButton?.addEventListener('click', () => {
-      localStorage.removeItem(STORAGE_KEY);
+      if (hasLocalStorage()) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+          console.warn('Unable to clear saved preferences', error);
+        }
+      }
       quantityInputs.forEach(input => {
         input.value = 0;
       });
@@ -547,12 +728,25 @@
         shippingSelect.value = shippingSelect.options[0]?.value || '';
       }
 
+      if (emailField) {
+        emailField.value = '';
+      }
+
       if (notesField) {
         notesField.value = '';
       }
 
+      if (quantityStatus) {
+        quantityStatus.textContent = '';
+      }
+
+      if (formStatus) {
+        formStatus.textContent = '';
+      }
+
       renderSummary();
     });
+    updateStorageStatus();
     buildMenuFromData();
   </script>
 </body>
