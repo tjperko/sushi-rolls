@@ -241,6 +241,13 @@
           </div>
           <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
           <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
+          <button
+            type="button"
+            id="reset-preferences"
+            style="margin-top:0.35rem;background:none;border:1px solid #cbd5e1;padding:0.35rem 0.6rem;border-radius:8px;color:var(--muted);cursor:pointer;font-size:0.9rem;"
+          >
+            Reset saved choices
+          </button>
           <p style="color:var(--muted);margin-top:0.75rem;">We combine shipping and show your exact total before charging each Friday. Edit quantities anytime until lock.</p>
         </div>
       </div>
@@ -311,6 +318,8 @@
     const summaryNotice = document.getElementById('summary-notice');
     const orderForm = document.getElementById('order-form');
     const shippingSelect = document.getElementById('shipping');
+    const notesField = document.getElementById('notes');
+    const resetPreferencesButton = document.getElementById('reset-preferences');
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
@@ -454,7 +463,8 @@
       renderSummary();
     }
 
-    shippingSelect?.addEventListener('change', renderSummary);
+    hydratePreferences();
+    renderSummary();
 
     orderForm?.addEventListener('submit', event => {
       event.preventDefault();
@@ -473,6 +483,25 @@
       if (formStatus) {
         formStatus.textContent = messageParts.filter(Boolean).join(' ');
       }
+
+      persistPreferences();
+    });
+
+    resetPreferencesButton?.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      quantityInputs.forEach(input => {
+        input.value = 0;
+      });
+
+      if (shippingSelect) {
+        shippingSelect.value = shippingSelect.options[0]?.value || '';
+      }
+
+      if (notesField) {
+        notesField.value = '';
+      }
+
+      renderSummary();
     });
     buildMenuFromData();
   </script>
