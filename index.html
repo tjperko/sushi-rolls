@@ -248,13 +248,6 @@
           <p id="pricing-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;"></p>
           <button
             type="button"
-            id="review-handoff"
-            style="margin-top:0.35rem;background:var(--brand);color:#fff;border:0;padding:0.6rem 0.9rem;border-radius:8px;cursor:pointer;font-weight:700;width:100%;box-shadow:0 8px 24px rgba(15,23,42,0.18);"
-          >
-            Review & handoff
-          </button>
-          <button
-            type="button"
             id="reset-preferences"
             style="margin-top:0.35rem;background:none;border:1px solid #cbd5e1;padding:0.35rem 0.6rem;border-radius:8px;color:var(--muted);cursor:pointer;font-size:0.9rem;"
           >
@@ -409,48 +402,35 @@
       return base || 'card';
     };
 
-    function normalizeMenuPayload(payload) {
-      if (!payload) return { items: [], updatedAt: null };
-
-      if (Array.isArray(payload)) {
-        return { items: payload, updatedAt: null };
-      }
-
-      return {
-        items: Array.isArray(payload.items) ? payload.items : [],
-        updatedAt: payload.updatedAt || payload.lastUpdated || payload?.meta?.updatedAt || null,
-      };
-    }
-
-    function formatFeedTimestamp(isoDate) {
-      if (!isoDate) return null;
-
-      const parsed = new Date(isoDate);
-      if (Number.isNaN(parsed)) return null;
-
-      return parsed.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-    }
+    const normalizeLabel = value => {
+      const trimmed = (value || '').trim();
+      return trimmed && trimmed !== 'undefined' ? trimmed : '';
+    };
 
     const renderCard = item => {
-      const slug = slugify(item.name, item.sku);
+      const safeName = normalizeLabel(item.name) || normalizeLabel(item.sku) || 'Card';
+      const slug = slugify(safeName, item.sku);
       const titleId = `${slug}-title`;
       const qtyId = `qty-${slug}`;
       const rawPrice = Number(item.price);
       const hasPrice = Number.isFinite(rawPrice) && rawPrice > 0;
       const price = hasPrice ? rawPrice : 0;
       const formattedPrice = hasPrice ? `$${price}` : 'TBD';
-      const imageAlt = item.imageAlt || `${item.name} card artwork`;
+      const pillText = normalizeLabel(item.pill) || 'Weekly drop';
+      const description = normalizeLabel(item.description) || 'New drop this week. Add it to your stack before Friday lock.';
+      const imageAlt = normalizeLabel(item.imageAlt) || `${safeName} card artwork`;
+      const imageSrc = normalizeLabel(item.image) || 'https://via.placeholder.com/600x360/0f172a/ffffff?text=Weekly+Drop';
 
       return `
         <article class="card" role="listitem" aria-labelledby="${titleId}">
-          <img src="${item.image}" alt="${imageAlt}" loading="lazy" width="600" height="360">
-          <div class="pill">${item.pill}</div>
-          <h3 id="${titleId}">${item.name}</h3>
-          <p>${item.description}</p>
+          <img src="${imageSrc}" alt="${imageAlt}" loading="lazy" width="600" height="360">
+          <div class="pill">${pillText}</div>
+          <h3 id="${titleId}">${safeName}</h3>
+          <p>${description}</p>
           <div class="price" data-price="${price}" data-has-price="${hasPrice}">${formattedPrice}</div>
           <div class="actions">
             <label class="quantity" for="${qtyId}">Qty</label>
-            <input id="${qtyId}" data-sku="${item.sku}" data-name="${item.name}" data-price="${hasPrice ? price : ''}" data-has-price="${hasPrice}" type="number" min="0" value="0" aria-label="Quantity for ${item.name}" />
+            <input id="${qtyId}" data-sku="${item.sku}" data-name="${safeName}" data-price="${hasPrice ? price : ''}" data-has-price="${hasPrice}" type="number" min="0" value="0" aria-label="Quantity for ${safeName}" />
           </div>
         </article>
       `;
@@ -559,15 +539,11 @@
       try {
         const response = await fetch('data/menu.json', { cache: 'no-store' });
         if (!response.ok) throw new Error('Menu fetch failed');
-        const payload = await response.json();
-        const { items: menuItems, updatedAt } = normalizeMenuPayload(payload);
-        const formattedUpdatedAt = formatFeedTimestamp(updatedAt);
+        const menuItems = await response.json();
 
         if (!Array.isArray(menuItems) || !menuItems.length) {
           if (menuStatus) {
-            menuStatus.textContent = formattedUpdatedAt
-              ? `No new drops found — showing the base menu. Last updated ${formattedUpdatedAt}.`
-              : 'No new drops found — showing the base menu.';
+            menuStatus.textContent = 'No new drops found — showing the base menu.';
             menuStatus.style.color = 'var(--accent)';
           }
           return;
@@ -576,9 +552,7 @@
         menuGrid.innerHTML = menuItems.map(renderCard).join('');
 
         if (menuStatus) {
-          menuStatus.textContent = formattedUpdatedAt
-            ? `Menu updated from latest data feed. Last updated ${formattedUpdatedAt}.`
-            : 'Menu updated from latest data feed.';
+          menuStatus.textContent = 'Menu updated from latest data feed.';
           menuStatus.style.color = 'var(--muted)';
         }
       } catch (error) {
@@ -646,11 +620,14 @@
 
     const getInputName = input => {
       if (!input) return 'Card';
-      return input.dataset?.name || input.dataset?.sku || 'Card';
+      const name = normalizeLabel(input.dataset?.name);
+      const sku = normalizeLabel(input.dataset?.sku);
+      return name || sku || 'Card';
     };
 
-    const collectLineItems = () =>
-      quantityInputs
+    function renderSummary() {
+      let total = 0;
+      const lines = quantityInputs
         .map(input => {
           const parsedPrice = Number(input.dataset.price);
           const hasPriceAttr = input.dataset.hasPrice;
@@ -658,25 +635,14 @@
             hasPriceAttr === 'true' ||
             (hasPriceAttr === undefined && Number.isFinite(parsedPrice) && parsedPrice > 0);
 
-          const qty = Number(input.value) || 0;
-          const unitPrice = hasPrice && Number.isFinite(parsedPrice) ? parsedPrice : null;
-          const lineTotal = hasPrice && unitPrice !== null ? qty * unitPrice : 0;
-
           return {
-            sku: input.dataset?.sku || slugify(getInputName(input)),
+            qty: Number(input.value) || 0,
             name: getInputName(input),
-            qty,
             price: parsedPrice,
             hasPrice,
-            unitPrice,
-            lineTotal,
           };
         })
         .filter(line => line.qty > 0);
-
-    function renderSummary() {
-      let total = 0;
-      const lines = collectLineItems();
 
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
       const shippingValue = shippingSelect?.value || '';
@@ -737,98 +703,6 @@
           pricingStatus.textContent = '';
         }
       }
-    }
-
-    const buildHandoffPayload = () => {
-      const lines = collectLineItems();
-      const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
-      const shippingValue = shippingSelect?.value || '';
-      const shippingLabel = getShippingLabel();
-      const shippingApplies = Boolean(shippingValue) && cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
-      const shippingFeeApplied = shippingValue === 'pickup' ? 0 : shippingApplies ? SHIPPING_FEE : 0;
-
-      const pricedSubtotal = lines.filter(line => line.hasPrice).reduce((sum, line) => sum + line.lineTotal, 0);
-      const pendingCount = lines.filter(line => !line.hasPrice).reduce((sum, line) => sum + line.qty, 0);
-
-      return {
-        meta: {
-          generatedAt: new Date().toISOString(),
-          weeklyLock: 'Friday 3 PM ET',
-          shippingDescriptor: shippingLabel,
-        },
-        customer: {
-          email: emailField?.value.trim() || '',
-          notes: notesField?.value.trim() || '',
-        },
-        shippingPreference: {
-          code: shippingValue || null,
-          label: shippingLabel,
-          feeApplied: shippingFeeApplied,
-          policy: shippingValue === 'pickup' ? 'pickup-waived' : cardCount >= 3 ? 'free-shipping' : 'conditional-shipping',
-        },
-        stack: {
-          cardCount,
-          items: lines.map(line => ({
-            sku: line.sku,
-            name: line.name,
-            quantity: line.qty,
-            unitPrice: line.unitPrice,
-            lineTotal: line.hasPrice ? line.lineTotal : null,
-            pricingStatus: line.hasPrice ? 'final' : 'pending',
-          })),
-          totals: {
-            pricedSubtotal,
-            shippingFee: shippingFeeApplied,
-            pendingCount,
-            grandTotal: pricedSubtotal + shippingFeeApplied,
-          },
-        },
-      };
-    };
-
-    function openHandoffModal() {
-      if (!handoffModal || !handoffJson) return;
-      const payload = buildHandoffPayload();
-      handoffJson.textContent = JSON.stringify(payload, null, 2);
-      handoffModal.style.display = 'flex';
-      handoffModal.focus({ preventScroll: true });
-    }
-
-    function closeHandoffModal() {
-      if (!handoffModal) return;
-      handoffModal.style.display = 'none';
-      if (handoffStatus) {
-        handoffStatus.textContent = '';
-      }
-    }
-
-    function copyHandoffPayload() {
-      if (!handoffJson) return;
-      const text = handoffJson.textContent || '';
-      if (!text) return;
-      navigator.clipboard
-        ?.writeText(text)
-        .then(() => {
-          if (handoffStatus) handoffStatus.textContent = 'Copied to clipboard.';
-        })
-        .catch(() => {
-          if (handoffStatus) handoffStatus.textContent = 'Copy blocked by browser.';
-        });
-    }
-
-    function downloadHandoffPayload() {
-      if (!handoffJson) return;
-      const text = handoffJson.textContent || '';
-      const blob = new Blob([text], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'rolls-weekly-handoff.json';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      if (handoffStatus) handoffStatus.textContent = 'Download ready.';
     }
 
     function handleQuantityChange(event) {
@@ -894,29 +768,6 @@
     shippingSelect?.addEventListener('change', () => {
       renderSummary();
       persistPreferences();
-    });
-
-    reviewButton?.addEventListener('click', () => {
-      openHandoffModal();
-    });
-
-    closeHandoff?.addEventListener('click', () => {
-      closeHandoffModal();
-    });
-
-    handoffModal?.addEventListener('click', event => {
-      if (event.target === handoffModal) {
-        closeHandoffModal();
-      }
-    });
-
-    copyHandoff?.addEventListener('click', copyHandoffPayload);
-    downloadHandoff?.addEventListener('click', downloadHandoffPayload);
-
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && handoffModal?.style.display === 'flex') {
-        closeHandoffModal();
-      }
     });
 
     emailField?.addEventListener('input', () => {
