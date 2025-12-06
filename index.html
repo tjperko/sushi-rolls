@@ -165,7 +165,7 @@
           <div class="price" data-price="12">$12</div>
           <div class="actions">
             <label class="quantity" for="qty-ohtani">Qty</label>
-            <input id="qty-ohtani" data-sku="now-123" data-name="Spicy Ohtani Roll" data-price="12" type="number" min="0" value="0" aria-label="Quantity for Spicy Ohtani Roll" />
+            <input id="qty-ohtani" data-sku="now-123" data-name="Spicy Ohtani Roll" data-price="12" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Spicy Ohtani Roll" />
           </div>
         </article>
 
@@ -177,7 +177,7 @@
           <div class="price" data-price="10">$10</div>
           <div class="actions">
             <label class="quantity" for="qty-clement">Qty</label>
-            <input id="qty-clement" data-sku="ls-889" data-name="California Clement Roll" data-price="10" type="number" min="0" value="0" aria-label="Quantity for California Clement Roll" />
+            <input id="qty-clement" data-sku="ls-889" data-name="California Clement Roll" data-price="10" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for California Clement Roll" />
           </div>
         </article>
 
@@ -189,7 +189,7 @@
           <div class="price" data-price="15">$15</div>
           <div class="actions">
             <label class="quantity" for="qty-queen">Qty</label>
-            <input id="qty-queen" data-sku="nba-queen" data-name="Dragon Queen Roll" data-price="15" type="number" min="0" value="0" aria-label="Quantity for Dragon Queen Roll" />
+            <input id="qty-queen" data-sku="nba-queen" data-name="Dragon Queen Roll" data-price="15" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Dragon Queen Roll" />
           </div>
         </article>
 
@@ -201,7 +201,7 @@
           <div class="price" data-price="8">$8</div>
           <div class="actions">
             <label class="quantity" for="qty-bundle">Qty</label>
-            <input id="qty-bundle" data-sku="parallel-addon" data-name="Rainbow Parallel Add-On" data-price="8" type="number" min="0" value="0" aria-label="Quantity for Rainbow Parallel Add-On" />
+            <input id="qty-bundle" data-sku="parallel-addon" data-name="Rainbow Parallel Add-On" data-price="8" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Rainbow Parallel Add-On" />
           </div>
         </article>
       </div>
@@ -244,6 +244,7 @@
           <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
           <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
           <p id="storage-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;color:var(--muted);"></p>
+          <p id="pricing-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;"></p>
           <button
             type="button"
             id="reset-preferences"
@@ -320,6 +321,7 @@
     const summaryTotal = document.getElementById('summary-total');
     const summaryNotice = document.getElementById('summary-notice');
     const summaryMeta = document.getElementById('summary-meta');
+    const pricingStatus = document.getElementById('pricing-status');
     const orderForm = document.getElementById('order-form');
     const emailField = document.getElementById('email');
     const shippingSelect = document.getElementById('shipping');
@@ -342,8 +344,10 @@
       const slug = slugify(item.name, item.sku);
       const titleId = `${slug}-title`;
       const qtyId = `qty-${slug}`;
-      const price = Number(item.price) || 0;
-      const formattedPrice = `$${price}`;
+      const rawPrice = Number(item.price);
+      const hasPrice = Number.isFinite(rawPrice) && rawPrice > 0;
+      const price = hasPrice ? rawPrice : 0;
+      const formattedPrice = hasPrice ? `$${price}` : 'TBD';
       const imageAlt = item.imageAlt || `${item.name} card artwork`;
 
       return `
@@ -352,10 +356,10 @@
           <div class="pill">${item.pill}</div>
           <h3 id="${titleId}">${item.name}</h3>
           <p>${item.description}</p>
-          <div class="price" data-price="${price}">${formattedPrice}</div>
+          <div class="price" data-price="${price}" data-has-price="${hasPrice}">${formattedPrice}</div>
           <div class="actions">
             <label class="quantity" for="${qtyId}">Qty</label>
-            <input id="${qtyId}" data-sku="${item.sku}" data-name="${item.name}" data-price="${price}" type="number" min="0" value="0" aria-label="Quantity for ${item.name}" />
+            <input id="${qtyId}" data-sku="${item.sku}" data-name="${item.name}" data-price="${hasPrice ? price : ''}" data-has-price="${hasPrice}" type="number" min="0" value="0" aria-label="Quantity for ${item.name}" />
           </div>
         </article>
       `;
@@ -534,11 +538,20 @@
     function renderSummary() {
       let total = 0;
       const lines = quantityInputs
-        .map(input => ({
-          qty: Number(input.value) || 0,
-          name: input.dataset.name,
-          price: Number(input.dataset.price) || 0,
-        }))
+        .map(input => {
+          const parsedPrice = Number(input.dataset.price);
+          const hasPriceAttr = input.dataset.hasPrice;
+          const hasPrice =
+            hasPriceAttr === 'true' ||
+            (hasPriceAttr === undefined && Number.isFinite(parsedPrice) && parsedPrice > 0);
+
+          return {
+            qty: Number(input.value) || 0,
+            name: input.dataset.name,
+            price: parsedPrice,
+            hasPrice,
+          };
+        })
         .filter(line => line.qty > 0);
 
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
@@ -551,6 +564,9 @@
         summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
         summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
         updateNotice(0, shippingValue);
+        if (pricingStatus) {
+          pricingStatus.textContent = '';
+        }
         if (summaryMeta) {
           const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
           summaryMeta.textContent = `No cards in your stack yet · ${shippingDescriptor}`;
@@ -559,10 +575,18 @@
       }
 
       const summaryItems = lines.map(line => {
-        const lineTotal = line.qty * line.price;
-        total += lineTotal;
-        return `<li><span>${line.qty} × ${line.name}</span><span>${formatCurrency(lineTotal)}</span></li>`;
+        const unitPrice = line.hasPrice ? line.price : 0;
+        const lineTotal = line.qty * (Number.isFinite(unitPrice) ? unitPrice : 0);
+        const priceDisplay = line.hasPrice ? formatCurrency(lineTotal) : 'TBD';
+
+        if (line.hasPrice) {
+          total += lineTotal;
+        }
+
+        return `<li><span>${line.qty} × ${line.name}</span><span>${priceDisplay}</span></li>`;
       });
+
+      const hasPendingPrices = lines.some(line => !line.hasPrice);
 
       if (shippingApplies) {
         summaryItems.push(`<li><span>Shipping</span><span>${formatCurrency(SHIPPING_FEE)}</span></li>`);
@@ -578,6 +602,12 @@
         summaryMeta.textContent = `${cardCount} ${noun} · ${shippingDescriptor}`;
       }
       updateNotice(cardCount, shippingValue);
+
+      if (pricingStatus) {
+        pricingStatus.textContent = hasPendingPrices
+          ? 'Some items are waiting on pricing — weekly totals exclude those lines until prices post.'
+          : '';
+      }
     }
 
     function handleQuantityChange(event) {
