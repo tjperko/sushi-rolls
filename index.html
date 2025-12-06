@@ -2,968 +2,174 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Rolls Weekly | À La Carte Sports Cards with Weekly Billing</title>
-  <meta name="description" content="Build an à la carte order of sports cards, lock it each Friday, and get billed weekly when your stack ships." />
-  <link rel="canonical" href="https://example.com/rolls-weekly" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Rolls Weekly | À La Carte Sports Cards with Weekly Billing" />
-  <meta property="og:description" content="Build an à la carte order of sports cards, lock it each Friday, and get billed weekly when your stack ships." />
-  <meta property="og:image" content="https://via.placeholder.com/1200x630/1abc9c/ffffff?text=Weekly+Card+Rolls" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="theme-color" content="#0f172a" />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sushi Rolls | Simple Landing Page</title>
+  <meta name="description" content="A clean landing page for a sushi-inspired brand." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-start: #f8fafc;
-      --bg-end: #e2e8f0;
-      --brand: #0f172a;
+      --bg: #0f172a;
+      --card: #0b1221;
       --accent: #e11d48;
-      --accent-2: #22c55e;
-      --muted: #6b7280;
-      --card-bg: #fff;
-      --max-width: 1200px;
-      --radius: 12px;
+      --accent-2: #22d3ee;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --radius: 14px;
+      --shadow: 0 16px 60px rgba(0,0,0,0.35);
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body { height: 100%; }
+    * { box-sizing: border-box; }
     body {
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
       margin: 0;
-      color: #0b1221;
-      background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.12), transparent 28%),
+                  radial-gradient(circle at 80% 0%, rgba(225,29,72,0.18), transparent 30%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
     }
 
-    .skip-link { position: absolute; left: 0; top: 0; transform: translateY(-120%); background: #000; color: #fff; padding: 0.5rem 1rem; z-index: 1000; }
-    .skip-link:focus { transform: translateY(0%); }
+    .card {
+      background: linear-gradient(145deg, #0b1221 0%, #0f172a 100%);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-width: 960px;
+      width: 100%;
+      padding: clamp(1.8rem, 3vw, 2.6rem);
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
 
-    header { background: var(--brand); color: #fff; padding: 1rem; }
-    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 1rem; }
-    nav[aria-label="Main navigation"] ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 1rem; align-items: center; justify-content: center; }
-    nav a { color: inherit; text-decoration: none; }
-    nav a:focus { outline: 3px solid #fff; outline-offset: 3px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.8rem;
+      background: rgba(34,211,238,0.12);
+      color: #7dd3fc;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+    }
 
-    .hero { position: relative; display: grid; align-items: center; justify-content: center; min-height: 60vh; color: #fff; text-align: center; background-image: linear-gradient(to bottom, rgba(0,0,0,.5), rgba(0,0,0,.55)), url("https://via.placeholder.com/1400x700/0f172a/ffffff?text=Rolls+Weekly+Cards"); background-size: cover; background-position: center; }
-    .hero-inner { max-width: 960px; padding: 2.5rem 1rem; }
-    .hero h1 { font-size: clamp(1.8rem, 5vw, 3.2rem); margin: 0; }
-    .hero p { font-size: clamp(1rem, 2.2vw, 1.3rem); margin: 0.8rem 0 1.2rem; color: #e2e8f0; }
-    .cta { background: var(--accent); color: #fff; padding: 0.95rem 1.35rem; border-radius: 10px; display: inline-block; text-decoration: none; border: 0; cursor: pointer; font-weight: 700; box-shadow: 0 8px 30px rgba(225, 29, 72, 0.25); }
-    .cta:focus { outline: 3px solid #fff; outline-offset: 4px; }
-    .subtle { color: #e2e8f0; font-size: 0.95rem; margin-top: 0.5rem; }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      margin: 0.6rem 0 0.4rem;
+      line-height: 1.15;
+    }
 
-    main { padding: 2rem 0; }
-    .section { padding: 3rem 1rem; background: transparent; }
-    .section h2 { text-align: center; color: var(--brand); margin-bottom: 0.75rem; }
-    .section p.lead { text-align: center; max-width: 820px; margin: 0.5rem auto 2rem; color: var(--muted); }
+    p.lead {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 640px;
+      margin: 0.2rem 0 1.4rem;
+    }
 
-    .grid { display: grid; gap: 1.5rem; }
-    .menu-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); align-items: start; }
-    .card { background: var(--card-bg); padding: 1.1rem; border-radius: var(--radius); box-shadow: 0 8px 28px rgba(15,23,42,0.07); display: flex; flex-direction: column; gap: 0.8rem; }
-    .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; }
-    .card h3 { margin: 0.15rem 0; color: var(--accent-2); font-size: 1.1rem; }
-    .card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
-    .price { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-    .card .actions { margin-top: auto; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-    .quantity { display: flex; gap: 0.4rem; align-items: center; color: var(--brand); }
-    .quantity input { width: 70px; padding: 0.45rem; border-radius: 8px; border: 1px solid #e5e7eb; }
-    .input-helper { font-size: 0.85rem; color: var(--accent); }
-    .pill { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem; border-radius: 999px; background: #f1f5f9; color: #0f172a; font-size: 0.85rem; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
 
-    .steps { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .step { background: #0f172a; color: #e2e8f0; padding: 1.25rem; border-radius: var(--radius); box-shadow: 0 10px 32px rgba(15,23,42,0.25); }
-    .step strong { display: block; color: #fff; font-size: 1.05rem; margin-bottom: 0.35rem; }
+    .btn {
+      background: linear-gradient(120deg, var(--accent) 0%, #fb7185 60%);
+      color: #fff;
+      padding: 0.95rem 1.35rem;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 12px 30px rgba(225,29,72,0.35);
+      transition: transform 150ms ease, box-shadow 150ms ease;
+    }
 
-    .two-col { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
-    .panel { background: var(--card-bg); padding: 1.3rem; border-radius: var(--radius); box-shadow: 0 10px 32px rgba(15,23,42,0.08); }
-    .panel h3 { margin-top: 0; }
-    .panel ul { padding-left: 1.1rem; color: var(--muted); }
-    .panel li { margin-bottom: 0.35rem; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 
-    .summary-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; color: var(--brand); }
-    .summary-list li { display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
-    .summary-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; border-top: 1px solid #e5e7eb; padding-top: 0.75rem; }
-    .summary-notice { margin-top: 0.35rem; color: var(--accent); font-weight: 700; }
+    .ghost {
+      background: rgba(255,255,255,0.08);
+      box-shadow: none;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #fff;
+    }
 
-    .faq { max-width: 900px; margin: 0 auto; }
-    .faq details { background: #fff; padding: 1rem; border-radius: var(--radius); box-shadow: 0 8px 24px rgba(15,23,42,0.06); margin-bottom: 0.75rem; }
-    .faq summary { font-weight: 700; color: var(--brand); cursor: pointer; }
-    .faq p { color: var(--muted); }
+    .grid {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.4rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
 
-    footer { background: #0f172a; color: #fff; padding: 1.5rem; margin-top: 2.5rem; }
-    .muted-center { text-align: center; color: var(--muted); }
+    .tile {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 1rem;
+    }
 
-    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
-    :focus { outline: 3px solid Highlight; outline-offset: 3px; }
-    @media (max-width: 768px) { .hero { min-height: 50vh; } .card img { height: 140px; } }
+    .tile strong { display: block; margin-bottom: 0.3rem; color: #fff; }
+    .tile span { color: var(--muted); }
+
+    footer {
+      margin-top: 1.4rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .blur {
+      position: absolute;
+      inset: -40% 10% auto auto;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 60%);
+      filter: blur(60px);
+      opacity: 0.8;
+      z-index: -1;
+    }
   </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to main content</a>
-  <header>
-    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:.75rem">
-        <div aria-hidden="true" style="font-size:1.6rem">🍣</div>
-        <div>
-          <h1 style="font-size:1rem;margin:0">Rolls Weekly</h1>
-          <div style="font-size:.88rem;color:#cbd5e1">À la carte cards with Friday lock & weekly billing</div>
-        </div>
-      </div>
-      <nav aria-label="Main navigation">
-        <ul>
-          <li><a href="#menu">Menu</a></li>
-          <li><a href="#how">How it Works</a></li>
-          <li><a href="#order">Order</a></li>
-          <li><a href="#faq">FAQ</a></li>
-        </ul>
-      </nav>
+  <div class="card" role="banner">
+    <div class="blur" aria-hidden="true"></div>
+    <span class="pill">🍣 Sushi Rolls</span>
+    <h1>Launch-ready landing page for your next drop.</h1>
+    <p class="lead">Showcase your brand, collect signups, and point people to your preorder or waitlist without touching a framework or build tooling.</p>
+
+    <div class="actions">
+      <a class="btn" href="#" aria-label="Primary call to action">Get started</a>
+      <a class="btn ghost" href="#" aria-label="Secondary call to action">View menu</a>
     </div>
-  </header>
 
-  <main id="main">
-    <section class="hero" aria-labelledby="hero-heading">
-      <div class="hero-inner container">
-        <h2 id="hero-heading">Launch a weekly à la carte card flow in minutes</h2>
-        <p>Pick Topps Now, Living Set, and chase singles like sushi pieces. Lock your cart every Friday, get billed weekly, and ship when your stack is ready.</p>
-        <a href="#order" class="cta">Start my weekly order</a>
-        <div class="subtle" role="status">Next billing lock: Friday 3 PM ET · Cancel or pause anytime</div>
+    <div class="grid" role="list">
+      <div class="tile" role="listitem">
+        <strong>Instant launch</strong>
+        <span>Single HTML file you can drop on any static host.</span>
       </div>
-    </section>
-
-    <section id="how" class="section container" aria-labelledby="how-heading">
-      <h2 id="how-heading">How weekly billing works</h2>
-      <p class="lead">This MVP keeps it simple: pick your cards, choose a ship cadence, and pay once a week when we seal your stack. No hidden fees, no mystery packs.</p>
-      <div class="grid steps" role="list" aria-label="How billing works">
-        <article class="step" role="listitem">
-          <strong>1) Add rolls all week</strong>
-          <p>Shop the à la carte menu Monday–Friday. We show live pricing and remaining print windows.</p>
-        </article>
-        <article class="step" role="listitem">
-          <strong>2) Friday lock + bill</strong>
-          <p>At 3 PM ET, carts lock. We charge your saved card for the items in your stack.</p>
-        </article>
-        <article class="step" role="listitem">
-          <strong>3) Ship on your schedule</strong>
-          <p>Choose weekly or bi-weekly shipping. We combine orders to save you postage.</p>
-        </article>
+      <div class="tile" role="listitem">
+        <strong>Modern look</strong>
+        <span>Gradient glow, clean typography, and accessible focus states.</span>
       </div>
-    </section>
-
-    <section id="menu" class="section container" aria-labelledby="menu-heading">
-      <h2 id="menu-heading">This Week's À La Carte Menu</h2>
-      <p class="lead">Add exactly what you want. Minimum 3 cards for free shipping. Prices are what you pay on Friday.</p>
-      <p id="menu-status" class="input-helper" aria-live="polite" style="text-align:center;margin-top:-0.5rem;">Loading the latest weekly drops…</p>
-
-      <div class="grid menu-grid" role="list" aria-label="Weekly drops">
-        <article class="card" role="listitem" aria-labelledby="ohtani-title">
-          <img src="https://via.placeholder.com/600x360/22c55e/ffffff?text=Now+%23123" alt="Ohtani Now card artwork" loading="lazy" width="600" height="360">
-          <div class="pill">Now #123 · closes Thu</div>
-          <h3 id="ohtani-title">Spicy Ohtani Roll</h3>
-          <p>Walk-off hero moment in green foil. Print-to-demand window closes Thursday night.</p>
-          <div class="price" data-price="12">$12</div>
-          <div class="actions">
-            <label class="quantity" for="qty-ohtani">Qty</label>
-            <input id="qty-ohtani" data-sku="now-123" data-name="Spicy Ohtani Roll" data-price="12" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Spicy Ohtani Roll" />
-          </div>
-        </article>
-
-        <article class="card" role="listitem" aria-labelledby="clement-title">
-          <img src="https://via.placeholder.com/600x360/e11d48/ffffff?text=Living+%23889" alt="Clement Living Set card artwork" loading="lazy" width="600" height="360">
-          <div class="pill">Living Set #889 · ships next week</div>
-          <h3 id="clement-title">California Clement Roll</h3>
-          <p>Rookie vibes with avo twist — order now, billed Friday, ships with your stack.</p>
-          <div class="price" data-price="10">$10</div>
-          <div class="actions">
-            <label class="quantity" for="qty-clement">Qty</label>
-            <input id="qty-clement" data-sku="ls-889" data-name="California Clement Roll" data-price="10" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for California Clement Roll" />
-          </div>
-        </article>
-
-        <article class="card" role="listitem" aria-labelledby="queen-title">
-          <img src="https://via.placeholder.com/600x360/2563eb/ffffff?text=Rookie+Auto" alt="Dragon Queen rookie auto card" loading="lazy" width="600" height="360">
-          <div class="pill">NBA Rookie Auto · 99 copies</div>
-          <h3 id="queen-title">Dragon Queen Roll</h3>
-          <p>Chrome finish with on-card signature. Limited to 99. Locks Friday.</p>
-          <div class="price" data-price="15">$15</div>
-          <div class="actions">
-            <label class="quantity" for="qty-queen">Qty</label>
-            <input id="qty-queen" data-sku="nba-queen" data-name="Dragon Queen Roll" data-price="15" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Dragon Queen Roll" />
-          </div>
-        </article>
-
-        <article class="card" role="listitem" aria-labelledby="bundles-title">
-          <img src="https://via.placeholder.com/600x360/f59e0b/ffffff?text=Parallels+Bundle" alt="Bundle preview of parallels" loading="lazy" width="600" height="360">
-          <div class="pill">Bundle add-on</div>
-          <h3 id="bundles-title">Rainbow Parallel Add-On</h3>
-          <p>We chase parallels across your picks. If we hit, they ride in the same bill & shipment.</p>
-          <div class="price" data-price="8">$8</div>
-          <div class="actions">
-            <label class="quantity" for="qty-bundle">Qty</label>
-            <input id="qty-bundle" data-sku="parallel-addon" data-name="Rainbow Parallel Add-On" data-price="8" data-has-price="true" type="number" min="0" value="0" aria-label="Quantity for Rainbow Parallel Add-On" />
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section id="order" class="section" style="background:#e2e8f0;" aria-labelledby="order-heading">
-      <div class="container grid two-col">
-        <div class="panel">
-          <h3 id="order-heading">Set your stack & billing</h3>
-          <p class="muted-center" style="margin:0 0 1rem">We email a checkout link Thursday night so you can confirm before the Friday lock.</p>
-          <form id="order-form">
-            <label for="email" style="display:block;margin-bottom:.5rem">Email for weekly invoice</label>
-            <input id="email" name="email" type="email" placeholder="you@example.com" required style="width:100%;padding:1rem;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:1rem" aria-required="true" />
-
-            <label for="shipping" style="display:block;margin-bottom:.5rem">Shipping cadence</label>
-            <select id="shipping" name="shipping" style="width:100%;padding:0.9rem;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:1rem">
-              <option value="" selected>Choose your shipping cadence</option>
-              <option value="weekly">Weekly — ship every Friday after billing</option>
-              <option value="biweekly">Bi-weekly — hold cards for two billing cycles</option>
-              <option value="pickup">Local pickup — waive shipping</option>
-            </select>
-
-            <label for="notes" style="display:block;margin-bottom:.5rem">Notes for this week's stack</label>
-            <textarea id="notes" name="notes" rows="3" style="width:100%;padding:1rem;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:1rem" placeholder="Add jersey number requests or packing prefs"></textarea>
-
-            <button type="submit" class="cta" style="width:100%">Save my weekly stack</button>
-            <p class="muted-center" style="margin-top:0.6rem">You won't be charged now — we bill when the window locks on Friday.</p>
-            <div id="form-status" role="status" aria-live="polite" style="margin-top:0.5rem;color:var(--muted);"></div>
-          </form>
-        </div>
-
-        <div class="panel" aria-live="polite">
-          <h3>Order summary</h3>
-          <p id="summary-meta" class="muted-center" style="margin-top:-0.35rem;margin-bottom:0.75rem;"></p>
-          <ul class="summary-list" id="summary-list">
-            <li><span>No items yet</span><span>$0</span></li>
-          </ul>
-          <div class="summary-total" id="summary-total">
-            <span>Weekly bill</span><span>$0</span>
-          </div>
-          <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
-          <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
-          <p id="storage-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;color:var(--muted);"></p>
-          <p id="pricing-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;"></p>
-          <button
-            type="button"
-            id="review-handoff"
-            style="margin-top:0.35rem;background:var(--brand);color:#fff;border:0;padding:0.6rem 0.9rem;border-radius:8px;cursor:pointer;font-weight:700;width:100%;box-shadow:0 8px 24px rgba(15,23,42,0.18);"
-          >
-            Review & handoff
-          </button>
-          <button
-            type="button"
-            id="reset-preferences"
-            style="margin-top:0.35rem;background:none;border:1px solid #cbd5e1;padding:0.35rem 0.6rem;border-radius:8px;color:var(--muted);cursor:pointer;font-size:0.9rem;"
-          >
-            Reset saved choices
-          </button>
-          <p style="color:var(--muted);margin-top:0.75rem;">We combine shipping and show your exact total before charging each Friday. Edit quantities anytime until lock.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section container" aria-labelledby="timeline-heading">
-      <h2 id="timeline-heading">Weekly launch timeline</h2>
-      <div class="grid two-col">
-        <div class="panel">
-          <h3>Creator checklist</h3>
-          <ul>
-            <li>Publish weekly menu Monday 10 AM ET</li>
-            <li>Send reminder email Thursday 6 PM ET</li>
-            <li>Lock carts + bill Friday 3 PM ET</li>
-            <li>Print + pack Friday afternoon</li>
-            <li>Drop-off to carrier Saturday AM</li>
-          </ul>
-        </div>
-        <div class="panel">
-          <h3>Customer promise</h3>
-          <ul>
-            <li>Transparent pricing at add-to-cart</li>
-            <li>Saved payment billed only once per week</li>
-            <li>Pause, skip, or edit quantities before lock</li>
-            <li>Tracking sent within 24 hours of pack-out</li>
-            <li>Refund or replace on print defects</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section id="faq" class="section" style="background:#f8fafc;" aria-labelledby="faq-heading">
-      <div class="container">
-        <h2 id="faq-heading">MVP FAQ</h2>
-        <div class="faq">
-          <details>
-            <summary>When do I get charged?</summary>
-            <p>We only charge once per week when the menu locks on Friday at 3 PM ET. You'll see a confirmation email on Thursday night with your current stack.</p>
-          </details>
-          <details>
-            <summary>Can I change or cancel?</summary>
-            <p>Yes. Edit quantities or cancel anytime before the Friday lock. After we bill, you can still pause shipping if you want to hold cards for the next bundle.</p>
-          </details>
-          <details>
-            <summary>Is there a minimum?</summary>
-            <p>We recommend three cards to unlock free shipping. Orders under that total will see a flat $4 ship line at billing.</p>
-          </details>
-          <details>
-            <summary>Do you support other sets?</summary>
-            <p>This MVP focuses on Topps Now, Living Set, and a single rookie auto chase. Tell us in the notes if you want Stadium Club or Bowman next.</p>
-          </details>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container" style="display:flex;flex-direction:column;gap:.5rem;align-items:center;">
-      <p style="margin:0">&copy; 2025 Rolls Weekly | À La Carte Card Drops</p>
-      <div><a href="#" style="color:#cbd5e1;margin-right:1rem">Privacy</a><a href="#" style="color:#cbd5e1">Terms</a></div>
-    </div>
-  </footer>
-
-  <div
-    id="handoff-modal"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="handoff-title"
-    tabindex="-1"
-    style="position:fixed;inset:0;background:rgba(15,23,42,0.6);display:none;align-items:center;justify-content:center;padding:1rem;z-index:1000;"
-  >
-    <div
-      style="background:#fff;border-radius:12px;max-width:760px;width:100%;padding:1.5rem;box-shadow:0 18px 48px rgba(15,23,42,0.25);display:flex;flex-direction:column;gap:0.75rem;max-height:90vh;overflow:auto;"
-    >
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
-        <div>
-          <p id="handoff-title" style="margin:0;font-weight:800;color:var(--brand);font-size:1.1rem;">Review & handoff payload</p>
-          <p style="margin:0;color:var(--muted);">Static preview for future Stripe/Shopify/Supabase endpoint.</p>
-        </div>
-        <button
-          type="button"
-          id="close-handoff"
-          aria-label="Close handoff preview"
-          style="background:none;border:1px solid #cbd5e1;border-radius:8px;padding:0.35rem 0.75rem;cursor:pointer;color:var(--muted);"
-        >
-          Close
-        </button>
-      </div>
-
-      <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;overflow:auto;">
-        <pre
-          id="handoff-json"
-          style="white-space:pre-wrap;word-break:break-word;margin:0;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:0.9rem;color:#0f172a;"
-          aria-live="polite"
-        ></pre>
-      </div>
-
-      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
-        <button
-          type="button"
-          id="copy-handoff"
-          style="background:var(--accent);color:#fff;border:0;border-radius:10px;padding:0.7rem 1rem;font-weight:700;cursor:pointer;box-shadow:0 10px 28px rgba(225,29,72,0.25);"
-        >
-          Copy JSON
-        </button>
-        <button
-          type="button"
-          id="download-handoff"
-          style="background:var(--accent-2);color:#fff;border:0;border-radius:10px;padding:0.7rem 1rem;font-weight:700;cursor:pointer;box-shadow:0 10px 28px rgba(34,197,94,0.25);"
-        >
-          Download JSON
-        </button>
-        <span id="handoff-status" role="status" aria-live="polite" style="color:var(--muted);"></span>
+      <div class="tile" role="listitem">
+        <strong>Swap content fast</strong>
+        <span>Just edit the headline, description, and button links.</span>
       </div>
     </div>
+
+    <footer>
+      Made with care for quick landings. Replace links with your preorder or contact form.
+    </footer>
   </div>
-
-  <script>
-    let quantityInputs = [];
-    const summaryList = document.getElementById('summary-list');
-    const summaryTotal = document.getElementById('summary-total');
-    const summaryNotice = document.getElementById('summary-notice');
-    const summaryMeta = document.getElementById('summary-meta');
-    const pricingStatus = document.getElementById('pricing-status');
-    const orderForm = document.getElementById('order-form');
-    const emailField = document.getElementById('email');
-    const shippingSelect = document.getElementById('shipping');
-    const notesField = document.getElementById('notes');
-    const resetPreferencesButton = document.getElementById('reset-preferences');
-    const reviewButton = document.getElementById('review-handoff');
-    const handoffModal = document.getElementById('handoff-modal');
-    const handoffJson = document.getElementById('handoff-json');
-    const closeHandoff = document.getElementById('close-handoff');
-    const copyHandoff = document.getElementById('copy-handoff');
-    const downloadHandoff = document.getElementById('download-handoff');
-    const handoffStatus = document.getElementById('handoff-status');
-    const STORAGE_KEY = 'rolls-weekly-prefs';
-    const SHIPPING_FEE = 4;
-    const formStatus = document.getElementById('form-status');
-    const quantityStatus = document.getElementById('quantity-status');
-    const storageStatus = document.getElementById('storage-status');
-    const menuGrid = document.querySelector('.menu-grid');
-    const menuStatus = document.getElementById('menu-status');
-
-    const slugify = (text, fallback) => {
-      const base = (text || fallback || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      return base || 'card';
-    };
-
-    function normalizeMenuPayload(payload) {
-      if (!payload) return { items: [], updatedAt: null };
-
-      if (Array.isArray(payload)) {
-        return { items: payload, updatedAt: null };
-      }
-
-      return {
-        items: Array.isArray(payload.items) ? payload.items : [],
-        updatedAt: payload.updatedAt || payload.lastUpdated || payload?.meta?.updatedAt || null,
-      };
-    }
-
-    function formatFeedTimestamp(isoDate) {
-      if (!isoDate) return null;
-
-      const parsed = new Date(isoDate);
-      if (Number.isNaN(parsed)) return null;
-
-      return parsed.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-    }
-
-    const renderCard = item => {
-      const slug = slugify(item.name, item.sku);
-      const titleId = `${slug}-title`;
-      const qtyId = `qty-${slug}`;
-      const rawPrice = Number(item.price);
-      const hasPrice = Number.isFinite(rawPrice) && rawPrice > 0;
-      const price = hasPrice ? rawPrice : 0;
-      const formattedPrice = hasPrice ? `$${price}` : 'TBD';
-      const imageAlt = item.imageAlt || `${item.name} card artwork`;
-
-      return `
-        <article class="card" role="listitem" aria-labelledby="${titleId}">
-          <img src="${item.image}" alt="${imageAlt}" loading="lazy" width="600" height="360">
-          <div class="pill">${item.pill}</div>
-          <h3 id="${titleId}">${item.name}</h3>
-          <p>${item.description}</p>
-          <div class="price" data-price="${price}" data-has-price="${hasPrice}">${formattedPrice}</div>
-          <div class="actions">
-            <label class="quantity" for="${qtyId}">Qty</label>
-            <input id="${qtyId}" data-sku="${item.sku}" data-name="${item.name}" data-price="${hasPrice ? price : ''}" data-has-price="${hasPrice}" type="number" min="0" value="0" aria-label="Quantity for ${item.name}" />
-          </div>
-        </article>
-      `;
-    };
-
-    let storageAvailable = null;
-    const hasLocalStorage = () => {
-      if (storageAvailable !== null) return storageAvailable;
-
-      try {
-        if (typeof window === 'undefined' || !('localStorage' in window)) {
-          storageAvailable = false;
-          return storageAvailable;
-        }
-
-        const testKey = '__rolls-storage-check__';
-        window.localStorage.setItem(testKey, 'ok');
-        window.localStorage.removeItem(testKey);
-        storageAvailable = true;
-      } catch (error) {
-        console.warn('LocalStorage unavailable; skipping persistence', error);
-        storageAvailable = false;
-      }
-
-      return storageAvailable;
-    };
-
-    function updateStorageStatus() {
-      if (!storageStatus) return;
-
-      if (hasLocalStorage()) {
-        storageStatus.textContent = 'Your picks auto-save in this browser.';
-        storageStatus.style.color = 'var(--muted)';
-      } else {
-        storageStatus.textContent = 'Saving is blocked here — keep this tab open until checkout to avoid losing edits.';
-        storageStatus.style.color = 'var(--accent)';
-      }
-    }
-
-    function persistPreferences() {
-      if (!hasLocalStorage()) return;
-
-      try {
-        const quantities = quantityInputs.reduce((acc, input) => {
-          const qty = Number(input.value) || 0;
-          if (qty > 0) {
-            acc[input.dataset.sku] = qty;
-          }
-          return acc;
-        }, {});
-
-        const payload = {
-          quantities,
-          email: emailField?.value || '',
-          shipping: shippingSelect?.value || '',
-          notes: notesField?.value || '',
-        };
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      } catch (error) {
-        console.warn('Unable to save preferences', error);
-      }
-    }
-
-    function hydratePreferences() {
-      if (!hasLocalStorage()) return;
-
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return;
-
-        const parsed = JSON.parse(saved);
-        const savedQuantities = parsed?.quantities || {};
-
-        quantityInputs.forEach(input => {
-          const savedValue = savedQuantities[input.dataset.sku];
-          if (typeof savedValue === 'number' && savedValue >= 0) {
-            input.value = savedValue;
-          }
-        });
-
-        if (emailField && typeof parsed?.email === 'string') {
-          emailField.value = parsed.email;
-        }
-
-        if (shippingSelect && parsed?.shipping) {
-          shippingSelect.value = parsed.shipping;
-        }
-
-        if (notesField && typeof parsed?.notes === 'string') {
-          notesField.value = parsed.notes;
-        }
-      } catch (error) {
-        console.warn('Unable to hydrate preferences', error);
-      }
-    }
-
-    async function buildMenuFromData() {
-      if (!menuGrid) return;
-
-      if (menuStatus) {
-        menuStatus.textContent = 'Loading the latest weekly drops…';
-        menuStatus.style.textAlign = 'center';
-      }
-
-      try {
-        const response = await fetch('data/menu.json', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Menu fetch failed');
-        const payload = await response.json();
-        const { items: menuItems, updatedAt } = normalizeMenuPayload(payload);
-        const formattedUpdatedAt = formatFeedTimestamp(updatedAt);
-
-        if (!Array.isArray(menuItems) || !menuItems.length) {
-          if (menuStatus) {
-            menuStatus.textContent = formattedUpdatedAt
-              ? `No new drops found — showing the base menu. Last updated ${formattedUpdatedAt}.`
-              : 'No new drops found — showing the base menu.';
-            menuStatus.style.color = 'var(--accent)';
-          }
-          return;
-        }
-
-        menuGrid.innerHTML = menuItems.map(renderCard).join('');
-
-        if (menuStatus) {
-          menuStatus.textContent = formattedUpdatedAt
-            ? `Menu updated from latest data feed. Last updated ${formattedUpdatedAt}.`
-            : 'Menu updated from latest data feed.';
-          menuStatus.style.color = 'var(--muted)';
-        }
-      } catch (error) {
-        console.warn('Using fallback menu markup:', error);
-
-        if (menuStatus) {
-          menuStatus.textContent = 'Unable to load the latest menu — showing fallback items.';
-          menuStatus.style.color = 'var(--accent)';
-        }
-      } finally {
-        initializeQuantityInputs();
-        hydratePreferences();
-        renderSummary();
-      }
-    }
-
-    function initializeQuantityInputs() {
-      quantityInputs = Array.from(document.querySelectorAll('input[type="number"][data-price]'));
-      quantityInputs.forEach(input => input.addEventListener('input', handleQuantityChange));
-    }
-
-    function formatCurrency(value) {
-      return `$${value.toFixed(2)}`;
-    }
-
-    function updateNotice(cardCount, shippingValue) {
-      if (!summaryNotice) return;
-
-      if (cardCount === 0) {
-        summaryNotice.textContent = 'Add cards to see shipping details.';
-        summaryNotice.style.display = 'block';
-        return;
-      }
-
-      if (!shippingValue) {
-        summaryNotice.textContent = 'Select a shipping cadence to see shipping costs.';
-        summaryNotice.style.display = 'block';
-        return;
-      }
-
-      const shippingApplies = shippingValue !== 'pickup' && cardCount < 3;
-
-      if (shippingValue === 'pickup') {
-        summaryNotice.textContent = 'Local pickup selected — shipping waived.';
-        summaryNotice.style.display = 'block';
-        return;
-      }
-
-      if (shippingApplies) {
-        const remaining = 3 - cardCount;
-        const noun = remaining === 1 ? 'card' : 'cards';
-        summaryNotice.textContent = `Add ${remaining} ${noun} to unlock free shipping. Orders under 3 cards add $${SHIPPING_FEE} shipping.`;
-        summaryNotice.style.display = 'block';
-      } else {
-        summaryNotice.textContent = 'Free shipping unlocked.';
-        summaryNotice.style.display = 'block';
-      }
-    }
-
-    const getShippingLabel = () => {
-      if (!shippingSelect) return 'Shipping preference not set';
-      const selectedOption = shippingSelect.options?.[shippingSelect.selectedIndex || 0];
-      return selectedOption?.text || 'Shipping preference not set';
-    };
-
-    const getInputName = input => {
-      if (!input) return 'Card';
-      return input.dataset?.name || input.dataset?.sku || 'Card';
-    };
-
-    const collectLineItems = () =>
-      quantityInputs
-        .map(input => {
-          const parsedPrice = Number(input.dataset.price);
-          const hasPriceAttr = input.dataset.hasPrice;
-          const hasPrice =
-            hasPriceAttr === 'true' ||
-            (hasPriceAttr === undefined && Number.isFinite(parsedPrice) && parsedPrice > 0);
-
-          const qty = Number(input.value) || 0;
-          const unitPrice = hasPrice && Number.isFinite(parsedPrice) ? parsedPrice : null;
-          const lineTotal = hasPrice && unitPrice !== null ? qty * unitPrice : 0;
-
-          return {
-            sku: input.dataset?.sku || slugify(getInputName(input)),
-            name: getInputName(input),
-            qty,
-            price: parsedPrice,
-            hasPrice,
-            unitPrice,
-            lineTotal,
-          };
-        })
-        .filter(line => line.qty > 0);
-
-    function renderSummary() {
-      let total = 0;
-      const lines = collectLineItems();
-
-      const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
-      const shippingValue = shippingSelect?.value || '';
-      const shippingApplies = Boolean(shippingValue) && cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
-      const shippingLabel = getShippingLabel();
-
-      if (!lines.length) {
-        summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
-        summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
-        updateNotice(0, shippingValue);
-        if (pricingStatus) {
-          pricingStatus.textContent = '';
-        }
-        if (summaryMeta) {
-          const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
-          summaryMeta.textContent = `No cards in your stack yet · ${shippingDescriptor}`;
-        }
-        return;
-      }
-
-      const pendingLines = lines.filter(line => !line.hasPrice);
-      const pendingCount = pendingLines.reduce((sum, line) => sum + line.qty, 0);
-      const summaryItems = lines.map(line => {
-        const unitPrice = line.hasPrice ? line.price : 0;
-        const lineTotal = line.qty * (Number.isFinite(unitPrice) ? unitPrice : 0);
-        const priceDisplay = line.hasPrice ? formatCurrency(lineTotal) : 'TBD';
-
-        if (line.hasPrice) {
-          total += lineTotal;
-        }
-
-        return `<li><span>${line.qty} × ${line.name}</span><span>${priceDisplay}</span></li>`;
-      });
-
-      const hasPendingPrices = pendingLines.length > 0;
-
-      if (shippingApplies) {
-        summaryItems.push(`<li><span>Shipping</span><span>${formatCurrency(SHIPPING_FEE)}</span></li>`);
-        total += SHIPPING_FEE;
-      }
-
-      summaryList.innerHTML = summaryItems.join('');
-
-      const totalLabel = hasPendingPrices ? 'Weekly bill (priced items shown)' : 'Weekly bill';
-      summaryTotal.innerHTML = `<span>${totalLabel}</span><span>${formatCurrency(total)}</span>`;
-      if (summaryMeta) {
-        const noun = cardCount === 1 ? 'card' : 'cards';
-        const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
-        summaryMeta.textContent = `${cardCount} ${noun} · ${shippingDescriptor}`;
-      }
-      updateNotice(cardCount, shippingValue);
-
-      if (pricingStatus) {
-        if (hasPendingPrices) {
-          const pendingNoun = pendingCount === 1 ? 'item is' : 'items are';
-          pricingStatus.textContent = `${pendingCount} ${pendingNoun} waiting on pricing — totals include priced items and shipping only until rates post.`;
-        } else {
-          pricingStatus.textContent = '';
-        }
-      }
-    }
-
-    const buildHandoffPayload = () => {
-      const lines = collectLineItems();
-      const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
-      const shippingValue = shippingSelect?.value || '';
-      const shippingLabel = getShippingLabel();
-      const shippingApplies = Boolean(shippingValue) && cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
-      const shippingFeeApplied = shippingValue === 'pickup' ? 0 : shippingApplies ? SHIPPING_FEE : 0;
-
-      const pricedSubtotal = lines.filter(line => line.hasPrice).reduce((sum, line) => sum + line.lineTotal, 0);
-      const pendingCount = lines.filter(line => !line.hasPrice).reduce((sum, line) => sum + line.qty, 0);
-
-      return {
-        meta: {
-          generatedAt: new Date().toISOString(),
-          weeklyLock: 'Friday 3 PM ET',
-          shippingDescriptor: shippingLabel,
-        },
-        customer: {
-          email: emailField?.value.trim() || '',
-          notes: notesField?.value.trim() || '',
-        },
-        shippingPreference: {
-          code: shippingValue || null,
-          label: shippingLabel,
-          feeApplied: shippingFeeApplied,
-          policy: shippingValue === 'pickup' ? 'pickup-waived' : cardCount >= 3 ? 'free-shipping' : 'conditional-shipping',
-        },
-        stack: {
-          cardCount,
-          items: lines.map(line => ({
-            sku: line.sku,
-            name: line.name,
-            quantity: line.qty,
-            unitPrice: line.unitPrice,
-            lineTotal: line.hasPrice ? line.lineTotal : null,
-            pricingStatus: line.hasPrice ? 'final' : 'pending',
-          })),
-          totals: {
-            pricedSubtotal,
-            shippingFee: shippingFeeApplied,
-            pendingCount,
-            grandTotal: pricedSubtotal + shippingFeeApplied,
-          },
-        },
-      };
-    };
-
-    function openHandoffModal() {
-      if (!handoffModal || !handoffJson) return;
-      const payload = buildHandoffPayload();
-      handoffJson.textContent = JSON.stringify(payload, null, 2);
-      handoffModal.style.display = 'flex';
-      handoffModal.focus({ preventScroll: true });
-    }
-
-    function closeHandoffModal() {
-      if (!handoffModal) return;
-      handoffModal.style.display = 'none';
-      if (handoffStatus) {
-        handoffStatus.textContent = '';
-      }
-    }
-
-    function copyHandoffPayload() {
-      if (!handoffJson) return;
-      const text = handoffJson.textContent || '';
-      if (!text) return;
-      navigator.clipboard
-        ?.writeText(text)
-        .then(() => {
-          if (handoffStatus) handoffStatus.textContent = 'Copied to clipboard.';
-        })
-        .catch(() => {
-          if (handoffStatus) handoffStatus.textContent = 'Copy blocked by browser.';
-        });
-    }
-
-    function downloadHandoffPayload() {
-      if (!handoffJson) return;
-      const text = handoffJson.textContent || '';
-      const blob = new Blob([text], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'rolls-weekly-handoff.json';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      if (handoffStatus) handoffStatus.textContent = 'Download ready.';
-    }
-
-    function handleQuantityChange(event) {
-      const rawValue = event.target.value;
-      const normalized = Math.max(0, Math.floor(Number(rawValue) || 0));
-      const itemName = getInputName(event.target);
-
-      if (String(normalized) !== rawValue) {
-        event.target.value = normalized;
-        if (quantityStatus) {
-          quantityStatus.textContent = `Adjusted "${itemName}" to ${normalized} (whole numbers only).`;
-        }
-      } else if (quantityStatus) {
-        quantityStatus.textContent = '';
-      }
-
-      renderSummary();
-      persistPreferences();
-    }
-
-    shippingSelect?.addEventListener('change', renderSummary);
-
-    hydratePreferences();
-    renderSummary();
-
-    orderForm?.addEventListener('submit', event => {
-      event.preventDefault();
-      const email = orderForm.email.value.trim();
-      const shipping = orderForm.shipping.value;
-      const notes = orderForm.notes.value.trim();
-      const shippingDescriptor = shipping ? getShippingLabel() : '';
-
-      const missingShipping = !shipping;
-
-      if (formStatus) {
-        formStatus.style.color = missingShipping ? 'var(--accent)' : 'var(--muted)';
-      }
-
-      if (missingShipping) {
-        if (formStatus) {
-          formStatus.textContent = 'Choose a shipping cadence to save your weekly stack.';
-        }
-        orderForm.shipping.focus();
-        persistPreferences();
-        return;
-      }
-
-      const messageParts = [
-        email ? `Saved for ${email}` : 'Saved your weekly stack',
-        shippingDescriptor ? `· ${shippingDescriptor}` : '',
-        notes
-          ? `· note: "${notes.length > 60 ? `${notes.slice(0, 60)}…` : notes}"`
-          : '',
-      ];
-
-      if (formStatus) {
-        formStatus.textContent = messageParts.filter(Boolean).join(' ');
-      }
-
-      persistPreferences();
-    });
-
-    shippingSelect?.addEventListener('change', () => {
-      renderSummary();
-      persistPreferences();
-    });
-
-    reviewButton?.addEventListener('click', () => {
-      openHandoffModal();
-    });
-
-    closeHandoff?.addEventListener('click', () => {
-      closeHandoffModal();
-    });
-
-    handoffModal?.addEventListener('click', event => {
-      if (event.target === handoffModal) {
-        closeHandoffModal();
-      }
-    });
-
-    copyHandoff?.addEventListener('click', copyHandoffPayload);
-    downloadHandoff?.addEventListener('click', downloadHandoffPayload);
-
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && handoffModal?.style.display === 'flex') {
-        closeHandoffModal();
-      }
-    });
-
-    emailField?.addEventListener('input', () => {
-      persistPreferences();
-    });
-
-    notesField?.addEventListener('input', () => {
-      persistPreferences();
-    });
-
-    resetPreferencesButton?.addEventListener('click', () => {
-      if (hasLocalStorage()) {
-        try {
-          localStorage.removeItem(STORAGE_KEY);
-        } catch (error) {
-          console.warn('Unable to clear saved preferences', error);
-        }
-      }
-      quantityInputs.forEach(input => {
-        input.value = 0;
-      });
-
-      if (shippingSelect) {
-        shippingSelect.value = shippingSelect.options[0]?.value || '';
-      }
-
-      if (emailField) {
-        emailField.value = '';
-      }
-
-      if (notesField) {
-        notesField.value = '';
-      }
-
-      if (quantityStatus) {
-        quantityStatus.textContent = '';
-      }
-
-      if (formStatus) {
-        formStatus.textContent = '';
-      }
-
-      renderSummary();
-      persistPreferences();
-    });
-    updateStorageStatus();
-    buildMenuFromData();
-  </script>
 </body>
 </html>
