@@ -537,7 +537,7 @@
         .map(input => ({
           qty: Number(input.value) || 0,
           name: input.dataset.name,
-          price: Number(input.dataset.price),
+          price: Number(input.dataset.price) || 0,
         }))
         .filter(line => line.qty > 0);
 
