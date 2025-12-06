@@ -234,6 +234,7 @@
 
         <div class="panel" aria-live="polite">
           <h3>Order summary</h3>
+          <p id="summary-meta" class="muted-center" style="margin-top:-0.35rem;margin-bottom:0.75rem;"></p>
           <ul class="summary-list" id="summary-list">
             <li><span>No items yet</span><span>$0</span></li>
           </ul>
@@ -318,6 +319,7 @@
     const summaryList = document.getElementById('summary-list');
     const summaryTotal = document.getElementById('summary-total');
     const summaryNotice = document.getElementById('summary-notice');
+    const summaryMeta = document.getElementById('summary-meta');
     const orderForm = document.getElementById('order-form');
     const emailField = document.getElementById('email');
     const shippingSelect = document.getElementById('shipping');
@@ -542,11 +544,16 @@
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
       const shippingValue = shippingSelect?.value || '';
       const shippingApplies = cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
+      const shippingLabel =
+        shippingSelect?.options?.[shippingSelect.selectedIndex || 0]?.text || 'Shipping preference not set';
 
       if (!lines.length) {
         summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
         summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
         updateNotice(0, shippingValue);
+        if (summaryMeta) {
+          summaryMeta.textContent = 'No cards in your stack yet.';
+        }
         return;
       }
 
@@ -564,6 +571,11 @@
       summaryList.innerHTML = summaryItems.join('');
 
       summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
+      if (summaryMeta) {
+        const noun = cardCount === 1 ? 'card' : 'cards';
+        const shippingDescriptor = shippingValue ? shippingLabel : 'Shipping not selected yet';
+        summaryMeta.textContent = `${cardCount} ${noun} · ${shippingDescriptor}`;
+      }
       updateNotice(cardCount, shippingValue);
     }
 
