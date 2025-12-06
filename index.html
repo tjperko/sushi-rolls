@@ -69,6 +69,7 @@
     .card .actions { margin-top: auto; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
     .quantity { display: flex; gap: 0.4rem; align-items: center; color: var(--brand); }
     .quantity input { width: 70px; padding: 0.45rem; border-radius: 8px; border: 1px solid #e5e7eb; }
+    .input-helper { font-size: 0.85rem; color: var(--accent); }
     .pill { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem; border-radius: 999px; background: #f1f5f9; color: #0f172a; font-size: 0.85rem; }
 
     .steps { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
@@ -309,6 +310,7 @@
     const summaryNotice = document.getElementById('summary-notice');
     const orderForm = document.getElementById('order-form');
     const formStatus = document.getElementById('form-status');
+    const quantityStatus = document.getElementById('quantity-status');
 
     function formatCurrency(value) {
       return `$${value.toFixed(2)}`;
@@ -357,7 +359,19 @@
       updateNotice(cardCount);
     }
 
-    quantityInputs.forEach(input => input.addEventListener('input', renderSummary));
+    quantityInputs.forEach(input => input.addEventListener('input', event => {
+      const rawValue = event.target.value;
+      const normalized = Math.max(0, Math.floor(Number(rawValue) || 0));
+
+      if (String(normalized) !== rawValue) {
+        event.target.value = normalized;
+        quantityStatus.textContent = `Adjusted "${event.target.dataset.name}" to ${normalized} (whole numbers only).`;
+      } else {
+        quantityStatus.textContent = '';
+      }
+
+      renderSummary();
+    }));
     renderSummary();
 
     orderForm?.addEventListener('submit', event => {
@@ -372,8 +386,8 @@
         notes ? `· note added` : '',
       ];
 
-      const message = messageParts.filter(Boolean).join(' ');
-      formStatus.textContent = message || 'Details saved.';
+      input.addEventListener('input', () => handleQuantityChange(input));
+      handleQuantityChange(input);
     });
   </script>
 </body>
