@@ -383,11 +383,14 @@
       const messageParts = [
         email ? `Saved for ${email}` : 'Saved your weekly stack',
         shipping ? `· ${shipping} shipping` : '',
-        notes ? `· note added` : '',
+        notes
+          ? `· note: "${notes.length > 60 ? `${notes.slice(0, 60)}…` : notes}"`
+          : '',
       ];
 
-      input.addEventListener('input', () => handleQuantityChange(input));
-      handleQuantityChange(input);
+      if (formStatus) {
+        formStatus.textContent = messageParts.filter(Boolean).join(' ');
+      }
     });
   </script>
 </body>
