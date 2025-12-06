@@ -241,6 +241,7 @@
           </div>
           <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
           <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
+          <p id="storage-status" class="input-helper" aria-live="polite" style="margin-top:0.1rem;color:var(--muted);"></p>
           <button
             type="button"
             id="reset-preferences"
@@ -325,6 +326,7 @@
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
+    const storageStatus = document.getElementById('storage-status');
     const menuGrid = document.querySelector('.menu-grid');
 
     const slugify = (text, fallback) => {
@@ -376,6 +378,18 @@
 
       return storageAvailable;
     };
+
+    function updateStorageStatus() {
+      if (!storageStatus) return;
+
+      if (hasLocalStorage()) {
+        storageStatus.textContent = 'Your picks auto-save in this browser.';
+        storageStatus.style.color = 'var(--muted)';
+      } else {
+        storageStatus.textContent = 'Saving is blocked here — keep this tab open until checkout to avoid losing edits.';
+        storageStatus.style.color = 'var(--accent)';
+      }
+    }
 
     function persistPreferences() {
       if (!hasLocalStorage()) return;
@@ -608,6 +622,7 @@
       renderSummary();
       persistPreferences();
     });
+    updateStorageStatus();
     buildMenuFromData();
   </script>
 </body>
