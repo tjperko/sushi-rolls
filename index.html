@@ -85,6 +85,7 @@
     .summary-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; color: var(--brand); }
     .summary-list li { display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
     .summary-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; border-top: 1px solid #e5e7eb; padding-top: 0.75rem; }
+    .summary-notice { margin-top: 0.35rem; color: var(--accent); font-weight: 700; }
 
     .faq { max-width: 900px; margin: 0 auto; }
     .faq details { background: #fff; padding: 1rem; border-radius: var(--radius); box-shadow: 0 8px 24px rgba(15,23,42,0.06); margin-bottom: 0.75rem; }
@@ -238,7 +239,7 @@
           <div class="summary-total" id="summary-total">
             <span>Weekly bill</span><span>$0</span>
           </div>
-          <div id="quantity-status" role="status" aria-live="polite" style="color:var(--muted);min-height:1.25rem;margin-top:0.35rem;"></div>
+          <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
           <p style="color:var(--muted);margin-top:0.75rem;">We combine shipping and show your exact total before charging each Friday. Edit quantities anytime until lock.</p>
         </div>
       </div>
@@ -306,6 +307,7 @@
     const quantityInputs = Array.from(document.querySelectorAll('input[type="number"][data-price]'));
     const summaryList = document.getElementById('summary-list');
     const summaryTotal = document.getElementById('summary-total');
+    const summaryNotice = document.getElementById('summary-notice');
     const orderForm = document.getElementById('order-form');
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
@@ -314,33 +316,18 @@
       return `$${value.toFixed(2)}`;
     }
 
-    function setHelperText(input, message) {
-      const helper = helperByInput.get(input);
-      if (!helper) return;
-      helper.textContent = message;
-      helper.hidden = !message;
-    }
+    function updateNotice(cardCount) {
+      if (!summaryNotice) return;
 
-    function handleQuantityChange(input) {
-      const rawValue = Number(input.value);
-      let sanitized = Number.isFinite(rawValue) ? rawValue : 0;
-      let helperMessage = '';
-
-      if (!Number.isFinite(rawValue)) {
-        helperMessage = 'Quantity reset to 0 — please enter a number.';
+      if (cardCount < 3) {
+        const remaining = 3 - cardCount;
+        const noun = remaining === 1 ? 'card' : 'cards';
+        summaryNotice.textContent = `Add ${remaining} ${noun} to unlock free shipping.`;
+        summaryNotice.style.display = 'block';
+      } else {
+        summaryNotice.textContent = '';
+        summaryNotice.style.display = 'none';
       }
-
-      sanitized = Math.round(sanitized);
-      if (sanitized < 0) {
-        sanitized = 0;
-        helperMessage = 'Quantity cannot be negative — set to 0.';
-      } else if (helperMessage === '' && sanitized !== rawValue) {
-        helperMessage = 'Rounded to the nearest whole card.';
-      }
-
-      input.value = String(sanitized);
-      setHelperText(input, helperMessage);
-      renderSummary();
     }
 
     function renderSummary() {
@@ -353,9 +340,12 @@
         }))
         .filter(line => line.qty > 0);
 
+      const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
+
       if (!lines.length) {
         summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
         summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
+        updateNotice(0);
         return;
       }
 
@@ -366,6 +356,7 @@
       }).join('');
 
       summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
+      updateNotice(cardCount);
     }
 
     quantityInputs.forEach(input => input.addEventListener('input', event => {
