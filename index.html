@@ -310,6 +310,8 @@
     const summaryTotal = document.getElementById('summary-total');
     const summaryNotice = document.getElementById('summary-notice');
     const orderForm = document.getElementById('order-form');
+    const shippingSelect = document.getElementById('shipping');
+    const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
 
@@ -317,17 +319,25 @@
       return `$${value.toFixed(2)}`;
     }
 
-    function updateNotice(cardCount) {
+    function updateNotice(cardCount, shippingValue) {
       if (!summaryNotice) return;
 
-      if (cardCount < 3) {
+      const shippingApplies = shippingValue !== 'pickup' && cardCount < 3;
+
+      if (shippingValue === 'pickup') {
+        summaryNotice.textContent = 'Local pickup selected — shipping waived.';
+        summaryNotice.style.display = 'block';
+        return;
+      }
+
+      if (shippingApplies) {
         const remaining = 3 - cardCount;
         const noun = remaining === 1 ? 'card' : 'cards';
-        summaryNotice.textContent = `Add ${remaining} ${noun} to unlock free shipping.`;
+        summaryNotice.textContent = `Add ${remaining} ${noun} to unlock free shipping. Orders under 3 cards add $${SHIPPING_FEE} shipping.`;
         summaryNotice.style.display = 'block';
       } else {
-        summaryNotice.textContent = '';
-        summaryNotice.style.display = 'none';
+        summaryNotice.textContent = 'Free shipping unlocked.';
+        summaryNotice.style.display = 'block';
       }
     }
 
@@ -342,22 +352,31 @@
         .filter(line => line.qty > 0);
 
       const cardCount = lines.reduce((sum, line) => sum + line.qty, 0);
+      const shippingValue = shippingSelect?.value || '';
+      const shippingApplies = cardCount > 0 && cardCount < 3 && shippingValue !== 'pickup';
 
       if (!lines.length) {
         summaryList.innerHTML = '<li><span>No items yet</span><span>$0</span></li>';
         summaryTotal.innerHTML = '<span>Weekly bill</span><span>$0</span>';
-        updateNotice(0);
+        updateNotice(0, shippingValue);
         return;
       }
 
-      summaryList.innerHTML = lines.map(line => {
+      const summaryItems = lines.map(line => {
         const lineTotal = line.qty * line.price;
         total += lineTotal;
         return `<li><span>${line.qty} × ${line.name}</span><span>${formatCurrency(lineTotal)}</span></li>`;
-      }).join('');
+      });
+
+      if (shippingApplies) {
+        summaryItems.push(`<li><span>Shipping</span><span>${formatCurrency(SHIPPING_FEE)}</span></li>`);
+        total += SHIPPING_FEE;
+      }
+
+      summaryList.innerHTML = summaryItems.join('');
 
       summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
-      updateNotice(cardCount);
+      updateNotice(cardCount, shippingValue);
     }
 
     quantityInputs.forEach(input => input.addEventListener('input', event => {
@@ -376,6 +395,8 @@
       renderSummary();
     }));
     renderSummary();
+
+    shippingSelect?.addEventListener('change', renderSummary);
 
     orderForm?.addEventListener('submit', event => {
       event.preventDefault();
