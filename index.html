@@ -241,6 +241,13 @@
           </div>
           <p class="summary-notice" id="summary-notice">Add 3 cards to unlock free shipping.</p>
           <p id="quantity-status" aria-live="polite" class="input-helper" style="margin-top:0.35rem;"></p>
+          <button
+            type="button"
+            id="reset-preferences"
+            style="margin-top:0.35rem;background:none;border:1px solid #cbd5e1;padding:0.35rem 0.6rem;border-radius:8px;color:var(--muted);cursor:pointer;font-size:0.9rem;"
+          >
+            Reset saved choices
+          </button>
           <p style="color:var(--muted);margin-top:0.75rem;">We combine shipping and show your exact total before charging each Friday. Edit quantities anytime until lock.</p>
         </div>
       </div>
@@ -311,9 +318,12 @@
     const summaryNotice = document.getElementById('summary-notice');
     const orderForm = document.getElementById('order-form');
     const shippingSelect = document.getElementById('shipping');
+    const notesField = document.getElementById('notes');
+    const resetPreferencesButton = document.getElementById('reset-preferences');
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
+    const STORAGE_KEY = 'rolls-weekly-preferences';
 
     function formatCurrency(value) {
       return `$${value.toFixed(2)}`;
@@ -385,6 +395,60 @@
       updateNotice(cardCount, shippingValue);
     }
 
+    function readStoredPreferences() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : null;
+      } catch (error) {
+        console.warn('Unable to read saved preferences', error);
+        return null;
+      }
+    }
+
+    function persistPreferences() {
+      try {
+        const payload = {
+          quantities: {},
+          shipping: shippingSelect?.value || '',
+          notes: notesField?.value || '',
+        };
+
+        quantityInputs.forEach(input => {
+          payload.quantities[input.dataset.sku] = Number(input.value) || 0;
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (error) {
+        console.warn('Unable to save preferences', error);
+      }
+    }
+
+    function hydratePreferences() {
+      const stored = readStoredPreferences();
+
+      if (!stored) return;
+
+      if (stored.quantities) {
+        quantityInputs.forEach(input => {
+          const savedQty = stored.quantities[input.dataset.sku];
+          if (typeof savedQty === 'number' && savedQty >= 0) {
+            input.value = savedQty;
+          }
+        });
+      }
+
+      if (shippingSelect && stored.shipping) {
+        const hasOption = Array.from(shippingSelect.options).some(option => option.value === stored.shipping);
+        if (hasOption) {
+          shippingSelect.value = stored.shipping;
+        }
+      }
+
+      if (notesField && typeof stored.notes === 'string') {
+        notesField.value = stored.notes;
+      }
+    }
+
     quantityInputs.forEach(input => input.addEventListener('input', event => {
       const rawValue = event.target.value;
       const normalized = Math.max(0, Math.floor(Number(rawValue) || 0));
@@ -399,11 +463,18 @@
       }
 
       renderSummary();
+      persistPreferences();
     }));
 
-    renderSummary();
+    shippingSelect?.addEventListener('change', () => {
+      renderSummary();
+      persistPreferences();
+    });
 
-    shippingSelect?.addEventListener('change', renderSummary);
+    notesField?.addEventListener('input', persistPreferences);
+
+    hydratePreferences();
+    renderSummary();
 
     orderForm?.addEventListener('submit', event => {
       event.preventDefault();
@@ -422,6 +493,25 @@
       if (formStatus) {
         formStatus.textContent = messageParts.filter(Boolean).join(' ');
       }
+
+      persistPreferences();
+    });
+
+    resetPreferencesButton?.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      quantityInputs.forEach(input => {
+        input.value = 0;
+      });
+
+      if (shippingSelect) {
+        shippingSelect.value = shippingSelect.options[0]?.value || '';
+      }
+
+      if (notesField) {
+        notesField.value = '';
+      }
+
+      renderSummary();
     });
   </script>
 </body>
