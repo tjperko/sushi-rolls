@@ -658,6 +658,21 @@
       const notes = orderForm.notes.value.trim();
       const shippingDescriptor = shipping ? getShippingLabel() : '';
 
+      const missingShipping = !shipping;
+
+      if (formStatus) {
+        formStatus.style.color = missingShipping ? 'var(--accent)' : 'var(--muted)';
+      }
+
+      if (missingShipping) {
+        if (formStatus) {
+          formStatus.textContent = 'Choose a shipping cadence to save your weekly stack.';
+        }
+        orderForm.shipping.focus();
+        persistPreferences();
+        return;
+      }
+
       const messageParts = [
         email ? `Saved for ${email}` : 'Saved your weekly stack',
         shippingDescriptor ? `· ${shippingDescriptor}` : '',
