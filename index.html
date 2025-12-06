@@ -314,6 +314,7 @@
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
+    const shippingSelect = document.getElementById('shipping');
 
     function formatCurrency(value) {
       return `$${value.toFixed(2)}`;
@@ -394,6 +395,9 @@
 
       renderSummary();
     }));
+
+    shippingSelect?.addEventListener('change', renderSummary);
+
     renderSummary();
 
     shippingSelect?.addEventListener('change', renderSummary);
