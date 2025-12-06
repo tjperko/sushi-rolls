@@ -69,6 +69,7 @@
     .card .actions { margin-top: auto; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
     .quantity { display: flex; gap: 0.4rem; align-items: center; color: var(--brand); }
     .quantity input { width: 70px; padding: 0.45rem; border-radius: 8px; border: 1px solid #e5e7eb; }
+    .input-helper { font-size: 0.85rem; color: var(--accent); }
     .pill { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem; border-radius: 999px; background: #f1f5f9; color: #0f172a; font-size: 0.85rem; }
 
     .steps { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
@@ -303,9 +304,39 @@
     const quantityInputs = Array.from(document.querySelectorAll('input[type="number"][data-price]'));
     const summaryList = document.getElementById('summary-list');
     const summaryTotal = document.getElementById('summary-total');
+    const helperByInput = new Map();
 
     function formatCurrency(value) {
       return `$${value.toFixed(2)}`;
+    }
+
+    function setHelperText(input, message) {
+      const helper = helperByInput.get(input);
+      if (!helper) return;
+      helper.textContent = message;
+      helper.hidden = !message;
+    }
+
+    function handleQuantityChange(input) {
+      const rawValue = Number(input.value);
+      let sanitized = Number.isFinite(rawValue) ? rawValue : 0;
+      let helperMessage = '';
+
+      if (!Number.isFinite(rawValue)) {
+        helperMessage = 'Quantity reset to 0 — please enter a number.';
+      }
+
+      sanitized = Math.round(sanitized);
+      if (sanitized < 0) {
+        sanitized = 0;
+        helperMessage = 'Quantity cannot be negative — set to 0.';
+      } else if (helperMessage === '' && sanitized !== rawValue) {
+        helperMessage = 'Rounded to the nearest whole card.';
+      }
+
+      input.value = String(sanitized);
+      setHelperText(input, helperMessage);
+      renderSummary();
     }
 
     function renderSummary() {
@@ -333,8 +364,17 @@
       summaryTotal.innerHTML = `<span>Weekly bill</span><span>${formatCurrency(total)}</span>`;
     }
 
-    quantityInputs.forEach(input => input.addEventListener('input', renderSummary));
-    renderSummary();
+    quantityInputs.forEach(input => {
+      const helper = document.createElement('div');
+      helper.className = 'input-helper';
+      helper.hidden = true;
+      helper.setAttribute('aria-live', 'polite');
+      input.insertAdjacentElement('afterend', helper);
+      helperByInput.set(input, helper);
+
+      input.addEventListener('input', () => handleQuantityChange(input));
+      handleQuantityChange(input);
+    });
   </script>
 </body>
 </html>
