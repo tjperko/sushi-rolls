@@ -849,6 +849,11 @@
       persistPreferences();
     }
 
+    shippingSelect?.addEventListener('change', renderSummary);
+
+    hydratePreferences();
+    renderSummary();
+
     orderForm?.addEventListener('submit', event => {
       event.preventDefault();
       const email = orderForm.email.value.trim();
