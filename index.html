@@ -514,6 +514,7 @@
       }
 
       renderSummary();
+      persistPreferences();
     }
 
     orderForm?.addEventListener('submit', event => {
@@ -537,6 +538,15 @@
       persistPreferences();
     });
 
+    shippingSelect?.addEventListener('change', () => {
+      renderSummary();
+      persistPreferences();
+    });
+
+    notesField?.addEventListener('input', () => {
+      persistPreferences();
+    });
+
     resetPreferencesButton?.addEventListener('click', () => {
       localStorage.removeItem(STORAGE_KEY);
       quantityInputs.forEach(input => {
@@ -552,6 +562,7 @@
       }
 
       renderSummary();
+      persistPreferences();
     });
     buildMenuFromData();
   </script>
