@@ -321,6 +321,12 @@
     function updateNotice(cardCount, shippingValue) {
       if (!summaryNotice) return;
 
+      if (cardCount === 0) {
+        summaryNotice.textContent = 'Add cards to see shipping details.';
+        summaryNotice.style.display = 'block';
+        return;
+      }
+
       const shippingApplies = shippingValue !== 'pickup' && cardCount < 3;
 
       if (shippingValue === 'pickup') {
