@@ -355,7 +355,27 @@
       `;
     };
 
-    const hasLocalStorage = () => typeof window !== 'undefined' && !!window.localStorage;
+    let storageAvailable = null;
+    const hasLocalStorage = () => {
+      if (storageAvailable !== null) return storageAvailable;
+
+      try {
+        if (typeof window === 'undefined' || !('localStorage' in window)) {
+          storageAvailable = false;
+          return storageAvailable;
+        }
+
+        const testKey = '__rolls-storage-check__';
+        window.localStorage.setItem(testKey, 'ok');
+        window.localStorage.removeItem(testKey);
+        storageAvailable = true;
+      } catch (error) {
+        console.warn('LocalStorage unavailable; skipping persistence', error);
+        storageAvailable = false;
+      }
+
+      return storageAvailable;
+    };
 
     function persistPreferences() {
       if (!hasLocalStorage()) return;
