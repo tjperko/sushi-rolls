@@ -463,6 +463,8 @@
       renderSummary();
     }
 
+    shippingSelect?.addEventListener('change', renderSummary);
+
     hydratePreferences();
     renderSummary();
 
