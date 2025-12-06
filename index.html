@@ -320,6 +320,7 @@
     const shippingSelect = document.getElementById('shipping');
     const notesField = document.getElementById('notes');
     const resetPreferencesButton = document.getElementById('reset-preferences');
+    const STORAGE_KEY = 'rolls-weekly-prefs';
     const SHIPPING_FEE = 4;
     const formStatus = document.getElementById('form-status');
     const quantityStatus = document.getElementById('quantity-status');
@@ -353,6 +354,57 @@
       `;
     };
 
+    function persistPreferences() {
+      try {
+        const quantities = quantityInputs.reduce((acc, input) => {
+          const qty = Number(input.value) || 0;
+          if (qty > 0) {
+            acc[input.dataset.sku] = qty;
+          }
+          return acc;
+        }, {});
+
+        const payload = {
+          quantities,
+          shipping: shippingSelect?.value || '',
+          notes: notesField?.value || '',
+        };
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (error) {
+        console.warn('Unable to save preferences', error);
+      }
+    }
+
+    function hydratePreferences() {
+      if (!window.localStorage) return;
+
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+
+        const parsed = JSON.parse(saved);
+        const savedQuantities = parsed?.quantities || {};
+
+        quantityInputs.forEach(input => {
+          const savedValue = savedQuantities[input.dataset.sku];
+          if (typeof savedValue === 'number' && savedValue >= 0) {
+            input.value = savedValue;
+          }
+        });
+
+        if (shippingSelect && parsed?.shipping) {
+          shippingSelect.value = parsed.shipping;
+        }
+
+        if (notesField && typeof parsed?.notes === 'string') {
+          notesField.value = parsed.notes;
+        }
+      } catch (error) {
+        console.warn('Unable to hydrate preferences', error);
+      }
+    }
+
     async function buildMenuFromData() {
       if (!menuGrid) return;
 
@@ -368,13 +420,14 @@
         console.warn('Using fallback menu markup:', error);
       } finally {
         initializeQuantityInputs();
+        hydratePreferences();
+        renderSummary();
       }
     }
 
     function initializeQuantityInputs() {
       quantityInputs = Array.from(document.querySelectorAll('input[type="number"][data-price]'));
       quantityInputs.forEach(input => input.addEventListener('input', handleQuantityChange));
-      renderSummary();
     }
 
     function formatCurrency(value) {
